@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>AI Recruitment Assistant - Multi-Agent Platform</title>
+  <title>AI Recruitment Assistant - Mobile Accessible</title>
   <meta name="description" content="AI Recruit: A production-ready, EU AI Act compliant multi-agent recruitment platform.">
   
   <!-- Libraries -->
@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body, #root { height: 100%; margin: 0; font-family: 'Inter', sans-serif; }
     
     /* Theme Variables */
@@ -62,6 +62,7 @@
       background-color: var(--bg-primary);
       color: var(--text-primary);
       transition: background-color 0.3s ease, color 0.3s ease;
+      overscroll-behavior-y: none; /* Prevent bounce effect on mobile */
     }
     
     .slide-container { 
@@ -70,6 +71,14 @@
       display: flex; 
       flex-direction: column;
       background-color: var(--bg-primary);
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 150px; /* Extra padding for mobile bottom nav */
+    }
+
+    @media (min-width: 768px) {
+      .slide-container {
+        padding-bottom: 0;
+      }
     }
     
     /* Glass Material */
@@ -110,17 +119,19 @@
       --spotlight-y: 50%;
     }
     
-    .spotlight-effect::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(300px circle at var(--spotlight-x) var(--spotlight-y), rgba(59, 130, 246, 0.15), transparent 40%);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+    /* Disable spotlight on touch devices for performance */
+    @media (hover: hover) {
+        .spotlight-effect::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(300px circle at var(--spotlight-x) var(--spotlight-y), rgba(59, 130, 246, 0.15), transparent 40%);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        }
+        .spotlight-effect:hover::before { opacity: 1; }
     }
-    
-    .spotlight-effect:hover::before { opacity: 1; }
     
     /* Animated Blobs */
     @keyframes blob-float {
@@ -132,14 +143,24 @@
     .bg-blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(100px);
+      filter: blur(80px); /* Reduced blur for mobile performance */
       opacity: 0.3;
       animation: blob-float 20s ease-in-out infinite;
     }
+
+    @media (min-width: 768px) {
+        .bg-blob { filter: blur(100px); }
+    }
     
-    .bg-blob-1 { width: 600px; height: 600px; background: var(--accent-blue); top: -200px; left: -100px; animation-delay: 0s; }
-    .bg-blob-2 { width: 500px; height: 500px; background: var(--accent-purple); bottom: -150px; right: -100px; animation-delay: -7s; }
-    .bg-blob-3 { width: 400px; height: 400px; background: var(--accent-green); top: 50%; left: 50%; animation-delay: -14s; }
+    .bg-blob-1 { width: 300px; height: 300px; background: var(--accent-blue); top: -100px; left: -50px; animation-delay: 0s; }
+    .bg-blob-2 { width: 250px; height: 250px; background: var(--accent-purple); bottom: -50px; right: -50px; animation-delay: -7s; }
+    .bg-blob-3 { width: 200px; height: 200px; background: var(--accent-green); top: 50%; left: 50%; animation-delay: -14s; }
+
+    @media (min-width: 768px) {
+        .bg-blob-1 { width: 600px; height: 600px; top: -200px; left: -100px; }
+        .bg-blob-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; }
+        .bg-blob-3 { width: 400px; height: 400px; }
+    }
     
     @media (prefers-reduced-motion: reduce) {
       .bg-blob, .glass-card, * { animation: none !important; transition: none !important; }
@@ -162,8 +183,9 @@
     /* Grid Overview */
     .grid-overview {
       position: fixed; inset: 0; background: var(--bg-primary);
-      z-index: 200; overflow-y: auto; padding: 2rem;
+      z-index: 200; overflow-y: auto; padding: 1rem;
     }
+    @media (min-width: 768px) { .grid-overview { padding: 2rem; } }
     
     .grid-tile {
       aspect-ratio: 16/9; border-radius: 12px; overflow: hidden;
@@ -182,7 +204,7 @@
     }
     
     .modal-content {
-      background: var(--bg-secondary); border-radius: 16px; padding: 2rem;
+      background: var(--bg-secondary); border-radius: 16px; padding: 1.5rem;
       max-width: 500px; width: 90%; border: 1px solid var(--border-color);
       max-height: 80vh; overflow-y: auto;
     }
@@ -197,7 +219,9 @@
       background: var(--bg-secondary); border: 1px solid var(--border-color);
       border-radius: 16px; padding: 1rem; z-index: 150;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      display: none; /* Hidden on mobile by default */
     }
+    @media (min-width: 768px) { .presenter-panel { display: block; } }
   </style>
 </head>
 <body>
@@ -398,23 +422,23 @@
     });
 
     const IntroSlide = memo(({ setCurrentSlide, nextSlide }) => (
-      <div className="slide-container flex flex-col items-center justify-center relative overflow-hidden text-center p-8 pb-32">
+      <div className="slide-container flex flex-col items-center justify-center relative overflow-hidden text-center p-4 md:p-8">
         <div className="bg-blob bg-blob-1" />
         <div className="bg-blob bg-blob-2" />
         <div className="bg-blob bg-blob-3" />
-        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-center w-full">
-          <div className="mb-8 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md">
+        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-center w-full pt-16 md:pt-0">
+          <div className="mb-4 md:mb-8 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md">
             <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>EU AI Act Compliant Platform</span>
+            <span className="text-xs md:text-sm font-semibold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>EU AI Act Compliant Platform</span>
           </div>
-          <h1 className="text-7xl md:text-9xl font-bold tracking-tighter mb-6" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-5xl md:text-9xl font-bold tracking-tighter mb-4 md:mb-6" style={{ color: 'var(--text-primary)' }}>
             AI Recruit<span className="text-blue-500">.</span>
           </h1>
-          <p className="text-2xl md:text-3xl font-light max-w-3xl mx-auto mb-16 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-xl md:text-3xl font-light max-w-3xl mx-auto mb-8 md:mb-16 leading-relaxed px-4" style={{ color: 'var(--text-secondary)' }}>
             The future of human-centered hiring.<br/>
             <span style={{ color: 'var(--text-primary)', opacity: 0.8 }}>Ethical. Automated. Explainable.</span>
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-8 md:mb-12 px-4">
             {[
               { label: 'Value & Compliance', slide: 1, icon: 'Gem', desc: 'ROI & EU Regulations' },
               { label: 'Use Cases', slide: 5, icon: 'Zap', desc: '6 Core Scenarios' },
@@ -427,15 +451,15 @@
                   <div className="text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-300"><Icon /></div>
                   <div className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{item.label}</div>
                   <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.desc}</div>
-                  <div className="mt-4 flex items-center text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-4 flex items-center text-blue-400 text-sm font-medium opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     View Section <Icons.ArrowRight />
                   </div>
                 </button>
               );
             })}
           </div>
-          <button onClick={nextSlide} className="px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20">Start Presentation</button>
-          <div className="mt-12 flex gap-8 text-base" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={nextSlide} className="px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20 mb-8 md:mb-0">Start Presentation</button>
+          <div className="mt-4 md:mt-12 flex flex-wrap justify-center gap-4 md:gap-8 text-sm" style={{ color: 'var(--text-muted)' }}>
             <a href="https://georginaydenov.github.io/Georgi-Naydenov-Portfolio/" target="_blank" className="hover:text-blue-400 transition-colors">Portfolio</a>
             <a href="https://www.linkedin.com/in/georgi-naydenov/" target="_blank" className="hover:text-blue-400 transition-colors">LinkedIn</a>
             <a href="https://github.com/GeorgiNaydenov" target="_blank" className="hover:text-blue-400 transition-colors">GitHub</a>
@@ -446,10 +470,10 @@
     ));
 
     const Value1 = memo(() => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 1</h2>
-          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Metrics & Pain Points</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 1</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Metrics & Pain Points</h1>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
             {[
               { val: 85, label: 'Screening Automation', desc: 'AI-assisted candidate evaluation', color: 'text-green-500', suffix: '%' },
@@ -458,14 +482,14 @@
               { val: 45, label: 'Faster Hiring', desc: 'From 42 to 23 days average', color: 'text-orange-500', suffix: '%' },
             ].map((item, i) => (
               <SpotlightGlass key={i} className="p-6 rounded-3xl">
-                <div className={`text-5xl font-bold ${item.color} mb-3`}><CountUp end={item.val} suffix={item.suffix} /></div>
+                <div className={`text-4xl md:text-5xl font-bold ${item.color} mb-3`}><CountUp end={item.val} suffix={item.suffix} /></div>
                 <div className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{item.label}</div>
                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item.desc}</div>
               </SpotlightGlass>
             ))}
           </div>
-          <SpotlightGlass className="rounded-3xl p-8">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8">
+            <h3 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <span className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-400"><Icons.XCircle /></span>
               Current Pain Points Addressed
             </h3>
@@ -492,12 +516,12 @@
     ));
 
     const Value2 = memo(() => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 2</h2>
-          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Solutions & Capabilities</h1>
-          <SpotlightGlass className="rounded-3xl p-8 mb-10">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 2</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Solutions & Capabilities</h1>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8 mb-10">
+            <h3 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <span className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400"><Icons.Check /></span>
               AI-Powered Solutions
             </h3>
@@ -519,7 +543,7 @@
               ))}
             </div>
           </SpotlightGlass>
-          <SpotlightGlass className="rounded-3xl p-8">
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8">
             <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>8 Specialized Agents Working in Concert</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {[
@@ -529,12 +553,12 @@
                 { n: 'Compliance', d: 'Bias & audit' }, { n: 'Analytics', d: 'Insights & reports' }
               ].map((a, i) => (
                 <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-                  <div className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
+                  <div className="font-semibold text-sm md:text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
                   <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{a.d}</div>
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap justify-center gap-6 text-sm border-t border-white/10 pt-4" style={{ color: 'var(--text-secondary)' }}>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm border-t border-white/10 pt-4" style={{ color: 'var(--text-secondary)' }}>
               {['EU AI Act High-Risk Compliant', 'Human-in-the-Loop Controls', 'Explainable AI Decisions', 'GDPR Article 22 Safeguards'].map((item, i) => (
                 <span key={i} className="flex items-center gap-2"><span className="text-green-500"><Icons.Check /></span>{item}</span>
               ))}
@@ -545,20 +569,20 @@
     ));
 
     const Compliance1 = memo(() => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 1</h2>
-          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>High-Risk Classification</h1>
-          <SpotlightGlass className="rounded-3xl p-8 border-l-8 border-yellow-500 mb-8">
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 1</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>High-Risk Classification</h1>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8 border-l-8 border-yellow-500 mb-8">
             <div className="flex items-center gap-4 mb-4">
               <span className="text-yellow-400"><Icons.AlertTriangle /></span>
-              <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Annex III Designation</h3>
+              <h3 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Annex III Designation</h3>
             </div>
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 mb-6">
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 md:p-6 mb-6">
               <p className="text-yellow-400 font-bold text-base mb-2">EU AI Act Annex III, Point 4(a)</p>
-              <p className="text-lg leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"AI systems intended to be used for recruitment or selection of natural persons, particularly for advertising vacancies, screening or filtering applications, evaluating candidates"</p>
+              <p className="text-base md:text-lg leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"AI systems intended to be used for recruitment or selection of natural persons, particularly for advertising vacancies, screening or filtering applications, evaluating candidates"</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['CV screening and shortlisting', 'Candidate scoring and ranking', 'Interview scheduling automation', 'Competency-based evaluation'].map((t, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                   <span className="text-yellow-500 text-xl">•</span>
@@ -567,7 +591,7 @@
               ))}
             </div>
           </SpotlightGlass>
-          <SpotlightGlass className="rounded-3xl p-8">
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8">
             <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Requirements Implemented</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
@@ -578,12 +602,12 @@
                 { req: 'Transparency (Art. 13)', status: 'Implemented', desc: 'Candidate notification of AI use' },
                 { req: 'Human Oversight (Art. 14)', status: 'Implemented', desc: 'Human final decision mandatory' },
               ].map((item, i) => (
-                <div key={i} className="flex justify-between items-start p-4 bg-white/5 rounded-xl border border-white/5">
+                <div key={i} className="flex flex-col md:flex-row justify-between items-start p-4 bg-white/5 rounded-xl border border-white/5 gap-2 md:gap-0">
                   <div>
                     <div className="font-medium text-base" style={{ color: 'var(--text-primary)' }}>{item.req}</div>
                     <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{item.desc}</div>
                   </div>
-                  <span className="text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded border border-green-500/20 whitespace-nowrap ml-4">{item.status}</span>
+                  <span className="text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded border border-green-500/20 whitespace-nowrap md:ml-4">{item.status}</span>
                 </div>
               ))}
             </div>
@@ -593,16 +617,16 @@
     ));
 
     const Compliance2 = memo(() => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 2</h2>
-          <h1 className="text-5xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>Rights & Transparency</h1>
-          <SpotlightGlass className="rounded-3xl p-10 mb-10">
-            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 2</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>Rights & Transparency</h1>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-10 mb-10">
+            <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <span className="text-purple-400"><Icons.Lock /></span>
               GDPR Article 22 Safeguards
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {[
                 { title: 'Right to Human Review', desc: 'All AI recommendations require human approval before action', icon: 'User' },
                 { title: 'Right to Explanation', desc: 'Candidates can request explanation of AI scoring logic', icon: 'MessageSquare' },
@@ -611,8 +635,8 @@
               ].map((item, i) => {
                 const Icon = Icons[item.icon] || Icons.User;
                 return (
-                  <div key={i} className="flex items-start gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
-                    <div className="bg-white/10 w-14 h-14 rounded-xl flex items-center justify-center shrink-0 text-purple-400"><Icon /></div>
+                  <div key={i} className="flex items-start gap-4 p-4 md:p-6 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="bg-white/10 w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shrink-0 text-purple-400"><Icon /></div>
                     <div>
                       <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{item.title}</h4>
                       <p className="text-base leading-snug" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
@@ -622,12 +646,12 @@
               })}
             </div>
           </SpotlightGlass>
-          <SpotlightGlass className="rounded-3xl p-8 border border-blue-500/30 bg-blue-500/5">
+          <SpotlightGlass className="rounded-3xl p-6 md:p-8 border border-blue-500/30 bg-blue-500/5">
             <h4 className="text-lg font-bold text-blue-400 mb-2 uppercase tracking-wide flex items-center gap-2">
               <Icons.Send />
               Mandatory Transparency Notice
             </h4>
-            <p className="text-lg italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-base md:text-lg italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               "This recruitment process uses AI-assisted screening tools. AI provides recommendations to support human recruiters, but all hiring decisions are made by humans. You have the right to: request human-only evaluation, receive explanation of AI assessments, contest automated decisions, and withdraw consent for AI processing."
             </p>
           </SpotlightGlass>
@@ -638,28 +662,28 @@
     const UseCaseContext = memo(({ ucData }) => {
       const PersonaIcon = Icons[ucData.persona.icon] || Icons.User;
       return (
-        <div className="slide-container p-8 pb-32">
-          <div className="max-w-6xl mx-auto pt-10">
-            <div className="flex items-center gap-4 mb-4">
-              <span className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • CONTEXT</span>
-              <span className="text-green-500 text-sm font-medium border border-green-500/30 px-3 py-1 rounded-full">{ucData.automation} Automation</span>
+        <div className="slide-container p-4 md:p-8">
+          <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 mb-4">
+              <span className={`px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • CONTEXT</span>
+              <span className="text-green-500 text-xs md:text-sm font-medium border border-green-500/30 px-3 py-1 rounded-full">{ucData.automation} Automation</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <SpotlightGlass className="rounded-3xl p-8 h-full">
+            <h1 className="text-3xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 h-full">
                 <div className="flex items-center gap-6 mb-6">
-                  <span className={`bg-white/10 w-20 h-20 rounded-full flex items-center justify-center text-${ucData.color}-400`}><PersonaIcon /></span>
+                  <span className={`bg-white/10 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-${ucData.color}-400`}><PersonaIcon /></span>
                   <div>
                     <div className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: 'var(--text-muted)' }}>Target Persona</div>
-                    <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{ucData.persona.title}</div>
+                    <div className="text-xl md:text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{ucData.persona.title}</div>
                   </div>
                 </div>
-                <p className="text-lg leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>{ucData.persona.description}</p>
-                <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/20">
+                <p className="text-base md:text-lg leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>{ucData.persona.description}</p>
+                <div className="bg-red-500/10 rounded-2xl p-4 md:p-6 border border-red-500/20">
                   <h4 className="text-red-400 font-bold mb-4 uppercase tracking-wide text-sm">Pain Points Solved</h4>
                   <ul className="space-y-3">
                     {ucData.painPoints.map((p, i) => (
-                      <li key={i} className="flex gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                      <li key={i} className="flex gap-3 text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                         <span className="text-red-400">•</span>
                         {p}
                       </li>
@@ -668,22 +692,22 @@
                 </div>
               </SpotlightGlass>
               <div className="flex flex-col gap-6 h-full">
-                <SpotlightGlass className="rounded-3xl p-8 flex-1">
+                <SpotlightGlass className="rounded-3xl p-6 md:p-8 flex-1">
                   <h4 className="text-blue-400 font-bold text-lg mb-4 flex items-center gap-2"><Icons.Inbox /> Required Inputs</h4>
                   <ul className="space-y-3">
                     {ucData.inputs.map((input, i) => (
-                      <li key={i} className="flex items-center gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                      <li key={i} className="flex items-center gap-3 text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                         {input}
                       </li>
                     ))}
                   </ul>
                 </SpotlightGlass>
-                <SpotlightGlass className="rounded-3xl p-8 flex-1">
+                <SpotlightGlass className="rounded-3xl p-6 md:p-8 flex-1">
                   <h4 className="text-green-400 font-bold text-lg mb-4 flex items-center gap-2"><Icons.Send /> Outputs & Outcomes</h4>
                   <ul className="space-y-3">
                     {ucData.outputs.map((output, i) => (
-                      <li key={i} className="flex items-center gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                      <li key={i} className="flex items-center gap-3 text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                         {output}
                       </li>
@@ -698,25 +722,25 @@
     });
 
     const UseCaseTech = memo(({ ucData }) => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
           <div className="flex items-center gap-4 mb-4">
-            <span className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • TECHNICAL</span>
+            <span className={`px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • TECHNICAL</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <SpotlightGlass className="rounded-3xl p-8">
+          <h1 className="text-3xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-8">
               <h4 className="text-purple-400 font-bold text-lg mb-6 uppercase tracking-wide">Architecture</h4>
               <div className="space-y-4">
                 {ucData.architecture.map((comp, i) => (
                   <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/10">
-                    <div className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{comp.name}</div>
+                    <div className="text-sm md:text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{comp.name}</div>
                     <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{comp.role}</div>
                   </div>
                 ))}
               </div>
             </SpotlightGlass>
-            <SpotlightGlass className="rounded-3xl p-8">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-8">
               <h4 className="text-cyan-400 font-bold text-lg mb-6 uppercase tracking-wide">Workflow Steps</h4>
               <div className="space-y-5 relative pl-4">
                 <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-white/10" />
@@ -728,7 +752,7 @@
                 ))}
               </div>
             </SpotlightGlass>
-            <SpotlightGlass className="rounded-3xl p-8 border-t-4 border-orange-500 flex flex-col justify-between">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-8 border-t-4 border-orange-500 flex flex-col justify-between gap-6 md:gap-0">
               <div>
                 <h4 className="text-orange-400 font-bold text-lg mb-6 uppercase tracking-wide">Exceptions</h4>
                 <div className="space-y-3 mb-10">
@@ -745,7 +769,7 @@
                   <Icons.User />
                   Human-in-the-Loop
                 </h4>
-                <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>{ucData.humanInLoop}</p>
+                <p className="text-xs md:text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>{ucData.humanInLoop}</p>
               </div>
             </SpotlightGlass>
           </div>
@@ -754,21 +778,21 @@
     ));
 
     const UserFlowSteps = ({ flowData }) => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-7xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • STEPS</h2>
-          <h1 className="text-5xl md:text-6xl font-bold mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • STEPS</h2>
+          <h1 className="text-3xl md:text-6xl font-bold mb-8 md:mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {flowData.steps.map((step, i) => (
-              <SpotlightGlass key={i} className="rounded-3xl p-8 relative group border-t-4 border-purple-500 h-full flex flex-col">
+              <SpotlightGlass key={i} className="rounded-3xl p-6 md:p-8 relative group border-t-4 border-purple-500 h-full flex flex-col">
                 <div className="absolute top-4 right-6 text-5xl font-bold opacity-5 select-none" style={{ color: 'var(--text-primary)' }}>{i+1}</div>
                 
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full">{step.agent}</div>
                 </div>
                 
-                <h3 className="text-xl font-bold mb-4 leading-tight" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+                <h3 className="text-lg md:text-xl font-bold mb-4 leading-tight" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
                 
                 <div className="space-y-4 flex-1">
                   <div>
@@ -797,34 +821,34 @@
     );
 
     const UserFlowDetails = ({ flowData }) => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • DETAILS</h2>
-          <h1 className="text-5xl md:text-6xl font-bold mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • DETAILS</h2>
+          <h1 className="text-3xl md:text-6xl font-bold mb-8 md:mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <SpotlightGlass className="rounded-3xl p-10">
-              <h3 className="text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10">
+              <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
                 <span className="text-3xl bg-white/10 p-2 rounded-xl">👤</span> Human Touch Points
               </h3>
               <ul className="space-y-6">
                 {flowData.humanTouchPoints.map((pt, i) => (
                   <li key={i} className="flex gap-4 items-center p-4 bg-white/5 rounded-2xl">
                     <span className="text-purple-400 text-lg">●</span> 
-                    <span className="text-lg" style={{ color: 'var(--text-secondary)' }}>{pt}</span>
+                    <span className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>{pt}</span>
                   </li>
                 ))}
               </ul>
             </SpotlightGlass>
-            <SpotlightGlass className="rounded-3xl p-10 border-t-8 border-amber-500">
-                <h3 className="text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-t-8 border-amber-500">
+                <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
                   <span className="text-3xl bg-white/10 p-2 rounded-xl">⚠️</span> Exception Handling
                 </h3>
                 <div className="space-y-4">
                   {flowData.exceptions.map((exc, i) => (
                     <div key={i} className="bg-amber-500/10 p-5 rounded-2xl border border-amber-500/20">
-                      <div className="text-base text-amber-400 font-bold mb-1">{exc.condition}</div>
-                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>→ {exc.action}</div>
+                      <div className="text-sm md:text-base text-amber-400 font-bold mb-1">{exc.condition}</div>
+                      <div className="text-xs md:text-sm" style={{ color: 'var(--text-secondary)' }}>→ {exc.action}</div>
                     </div>
                   ))}
                 </div>
@@ -835,18 +859,18 @@
     );
 
     const Arch1 = () => (
-      <div className="slide-container p-8 pb-32">
-          <div className="max-w-5xl mx-auto pt-10 text-center">
-            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 1</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Interface & Intelligence</h1>
+      <div className="slide-container p-4 md:p-8">
+          <div className="max-w-5xl mx-auto pt-16 md:pt-10 text-center">
+            <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 1</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Interface & Intelligence</h1>
             
             <div className="space-y-8">
               {/* Layer 1 */}
-              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-rose-500 text-left">
-                <h3 className="text-rose-400 font-bold text-2xl mb-4">Client Interface Layer</h3>
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-l-8 border-rose-500 text-left">
+                <h3 className="text-rose-400 font-bold text-xl md:text-2xl mb-4">Client Interface Layer</h3>
                 <div className="flex flex-wrap gap-4">
                   {['Career Portal', 'ATS Integration', 'Recruiter Dashboard', 'Hiring Manager App', 'Candidate Portal'].map((t,i) => (
-                      <span key={i} className="px-4 py-2 bg-white/10 rounded-full text-base" style={{ color: 'var(--text-primary)' }}>{t}</span>
+                      <span key={i} className="px-3 py-1 md:px-4 md:py-2 bg-white/10 rounded-full text-sm md:text-base" style={{ color: 'var(--text-primary)' }}>{t}</span>
                   ))}
                 </div>
               </SpotlightGlass>
@@ -854,12 +878,12 @@
               <div className="h-8 w-0.5 bg-gray-700 mx-auto"></div>
 
               {/* Layer 2 */}
-              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-cyan-500 text-left">
-                <h3 className="text-cyan-400 font-bold text-2xl mb-6">LLM Reasoning Engine</h3>
-                <div className="grid grid-cols-2 gap-6">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-l-8 border-cyan-500 text-left">
+                <h3 className="text-cyan-400 font-bold text-xl md:text-2xl mb-6">LLM Reasoning Engine</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {['CV parsing & understanding', 'Competency matching', 'Natural conversation', 'Explanation generation'].map((t,i) => (
-                      <div key={i} className="flex items-center gap-4 text-lg" style={{ color: 'var(--text-secondary)' }}>
-                          <span className="w-2.5 h-2.5 bg-cyan-500 rounded-full"></span> {t}
+                      <div key={i} className="flex items-center gap-4 text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                          <span className="w-2.5 h-2.5 bg-cyan-500 rounded-full shrink-0"></span> {t}
                       </div>
                   ))}
                 </div>
@@ -868,9 +892,9 @@
               <div className="h-8 w-0.5 bg-gray-700 mx-auto"></div>
 
               {/* Layer 3 */}
-              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-amber-500 text-left">
-                <h3 className="text-amber-400 font-bold text-2xl mb-4">Prompt Assembly & Context Injection</h3>
-                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Job requirements, candidate history, competency framework, bias rules, compliance constraints</p>
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-l-8 border-amber-500 text-left">
+                <h3 className="text-amber-400 font-bold text-xl md:text-2xl mb-4">Prompt Assembly & Context Injection</h3>
+                <p className="text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>Job requirements, candidate history, competency framework, bias rules, compliance constraints</p>
               </SpotlightGlass>
             </div>
           </div>
@@ -878,19 +902,19 @@
     );
 
     const Arch2 = () => (
-      <div className="slide-container p-8 pb-32">
-          <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 2</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Core Orchestration & Memory</h1>
+      <div className="slide-container p-4 md:p-8">
+          <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 2</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Core Orchestration & Memory</h1>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
               {/* Layer 4 */}
-              <SpotlightGlass className="rounded-3xl p-8 border-t-8 border-purple-500 h-full">
-                <h3 className="text-purple-400 font-bold text-2xl mb-2 text-center">Crew AI Orchestration Layer</h3>
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 border-t-8 border-purple-500 h-full">
+                <h3 className="text-purple-400 font-bold text-xl md:text-2xl mb-2 text-center">Crew AI Orchestration Layer</h3>
                 <p className="text-gray-500 text-xs text-center mb-8 uppercase tracking-wide">Multi-Agent Coordination with Human Oversight Checkpoints</p>
                 <div className="space-y-6">
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Plan Engine</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Plan Engine</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Recruitment task decomposition</li>
                       <li>• Human checkpoint scheduling</li>
@@ -898,7 +922,7 @@
                     </ul>
                   </div>
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Routing Decisions</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Routing Decisions</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Agent selection logic</li>
                       <li>• Escalation triggers</li>
@@ -906,7 +930,7 @@
                     </ul>
                   </div>
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Execution Monitor</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Execution Monitor</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Audit trail logging</li>
                       <li>• SLA tracking & Fairness metrics</li>
@@ -916,12 +940,12 @@
               </SpotlightGlass>
 
               {/* Layer 5 */}
-              <SpotlightGlass className="rounded-3xl p-8 border-t-8 border-yellow-500 h-full">
-                <h3 className="text-yellow-400 font-bold text-2xl mb-2 text-center">State & Memory Management</h3>
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 border-t-8 border-yellow-500 h-full">
+                <h3 className="text-yellow-400 font-bold text-xl md:text-2xl mb-2 text-center">State & Memory Management</h3>
                 <p className="text-gray-500 text-xs text-center mb-8 uppercase tracking-wide">Candidate profiles, interview history, evaluation data, compliance records</p>
                 <div className="space-y-6">
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Candidate Intelligence</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Candidate Intelligence</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Skills embeddings</li>
                       <li>• Application history</li>
@@ -929,7 +953,7 @@
                     </ul>
                   </div>
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Evaluation Framework</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Evaluation Framework</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Competency models</li>
                       <li>• Scorecard templates</li>
@@ -937,7 +961,7 @@
                     </ul>
                   </div>
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Audit Memory</h4>
+                    <h4 className="font-bold text-base md:text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Audit Memory</h4>
                     <ul className="text-sm text-gray-400 space-y-2">
                       <li>• Decision logs & Bias audit trail</li>
                       <li>• Compliance evidence</li>
@@ -951,24 +975,24 @@
     );
 
     const Arch3 = () => (
-      <div className="slide-container p-8 pb-32">
-          <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 3</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workers & Integration</h1>
+      <div className="slide-container p-4 md:p-8">
+          <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 3</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workers & Integration</h1>
             
             {/* Layer 6 */}
-            <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-green-500 mb-10">
-              <h3 className="text-green-400 font-bold text-2xl mb-2">Recruitment Agent Worker Pool</h3>
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-l-8 border-green-500 mb-10">
+              <h3 className="text-green-400 font-bold text-xl md:text-2xl mb-2">Recruitment Agent Worker Pool</h3>
               <p className="text-gray-500 text-xs mb-8 uppercase tracking-wide">Specialized agents for ethical, transparent recruitment automation</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                   {[
                   {n:'CV Screener', d:'Resume analysis'}, {n:'Scheduler', d:'Interview booking'},
                   {n:'Interview', d:'Notes & capture'}, {n:'Evaluator', d:'Scoring & ranking'},
                   {n:'Communicator', d:'Candidate updates'}, {n:'Compliance', d:'Bias & audit'},
                   {n:'Decision', d:'Recommendations'}, {n:'Analytics', d:'Insights & reports'}
                   ].map((a,i) => (
-                  <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                      <div className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
+                  <div key={i} className="bg-white/5 p-3 md:p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <div className="font-bold text-sm md:text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
                       <div className="text-gray-400 text-xs mt-1">{a.d}</div>
                   </div>
                   ))}
@@ -976,9 +1000,9 @@
             </SpotlightGlass>
 
             {/* Layer 7 */}
-            <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-blue-500">
-              <h3 className="text-blue-400 font-bold text-2xl mb-8">External Integration Layer</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-l-8 border-blue-500">
+              <h3 className="text-blue-400 font-bold text-xl md:text-2xl mb-8">External Integration Layer</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
                   <div className="bg-white/5 p-5 rounded-2xl border border-white/10 text-center">
                       <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>ATS Systems</div>
                       <div className="text-gray-400 text-xs">Greenhouse, Lever, Workday</div>
@@ -1002,12 +1026,12 @@
     );
 
     const Agents1 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-7xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 1</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>The Agent Suite</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 1</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>The Agent Suite</h1>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {[
                 { name: 'CV Screener', tag: 'Screener', color: 'emerald', desc: 'AI-powered resume analysis with bias detection', items: ['Skills extraction & matching', 'Experience validation', 'Bias-checked scoring', 'Explainable recommendations', 'Gap analysis generation'] },
                 { name: 'Master Orchestrator', tag: 'Coordinator', color: 'indigo', desc: 'Central intelligence with human checkpoint enforcement', items: ['Workflow stage management', 'Human approval routing', 'Compliance verification', 'Agent task distribution', 'Exception escalation'], core: true },
@@ -1021,7 +1045,7 @@
               ].map((agent, i) => (
                 <SpotlightGlass key={i} className={`rounded-3xl p-6 border-t-8 border-${agent.color}-500 hover:bg-white/5 transition-all relative h-full flex flex-col`}>
                   {agent.core && <div className="absolute top-4 right-4 bg-indigo-500 text-white text-xs px-3 py-1 rounded-full font-bold uppercase">Core</div>}
-                  <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{agent.name}</h3>
+                  <h3 className="text-lg md:text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{agent.name}</h3>
                   <p className="text-gray-400 text-xs mb-4 italic flex-1">{agent.desc}</p>
                   <ul className="text-xs text-gray-300 space-y-2 mt-auto">
                     {agent.items.map((item, j) => <li key={j} className="flex gap-2"><span>•</span> {item}</li>)}
@@ -1034,14 +1058,14 @@
     );
 
     const Agents2 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 2</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workflow & Rules</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 2</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workflow & Rules</h1>
             
-            <SpotlightGlass className="rounded-3xl p-10 mb-10">
-              <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Agent Hand-offs (Human Checkpoints)</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 mb-10">
+              <h3 className="text-xl md:text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Agent Hand-offs (Human Checkpoints)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   { from: 'CV Screener', to: 'Scheduler', flow: 'Approved candidates → Booking', checkpoint: '👤 Recruiter approval' },
                   { from: 'Scheduler', to: 'Interview', flow: 'Confirmed slots → Prep', checkpoint: '✓ Auto-proceed' },
@@ -1063,8 +1087,8 @@
               </div>
             </SpotlightGlass>
 
-            <SpotlightGlass className="rounded-3xl p-10 border-t-8 border-indigo-500">
-              <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 border-t-8 border-indigo-500">
+              <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
                 <span className="text-3xl">⚙️</span> Ethical AI Coordination Rules
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1090,16 +1114,16 @@
     );
 
     const Data1 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 1</h2>
-          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Data Lifecycle & Retention</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 1</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Data Lifecycle & Retention</h1>
 
-          <SpotlightGlass className="rounded-3xl p-10 mb-12 border-t-8 border-blue-500">
-            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-10 mb-12 border-t-8 border-blue-500">
+            <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <span className="text-3xl">🔄</span> Candidate Data Lifecycle
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
               <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                 <div className="text-blue-400 font-bold text-sm mb-4 uppercase tracking-widest">1. Intake Sources</div>
                 <ul className="text-sm text-gray-400 space-y-2">
@@ -1139,8 +1163,8 @@
             </div>
           </SpotlightGlass>
 
-          <SpotlightGlass className="rounded-3xl p-10">
-            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+          <SpotlightGlass className="rounded-3xl p-6 md:p-10">
+            <h3 className="text-xl md:text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
               <span className="text-3xl">⏱️</span> Retention Policies
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -1163,22 +1187,22 @@
     );
 
     const Data2 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-7xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 2</h2>
-          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Role-Based Access Control</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 2</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Role-Based Access Control</h1>
 
-          <SpotlightGlass className="rounded-3xl p-10">
+          <SpotlightGlass className="rounded-3xl p-4 md:p-10">
             <div className="overflow-x-auto">
-              <table className="w-full text-base text-left border-collapse">
+              <table className="w-full text-sm md:text-base text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-white/10 text-gray-500">
-                    <th className="pb-4 pl-4 font-bold uppercase tracking-wider text-sm">Role</th>
-                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">PII Data</th>
-                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">CV Access</th>
-                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Notes</th>
-                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Offer Details</th>
-                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Audit Logs</th>
+                    <th className="pb-4 pl-4 font-bold uppercase tracking-wider text-xs md:text-sm">Role</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-xs md:text-sm">PII Data</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-xs md:text-sm">CV Access</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-xs md:text-sm">Notes</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-xs md:text-sm">Offer Details</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-xs md:text-sm">Audit Logs</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-300">
@@ -1190,7 +1214,7 @@
                     { role: 'CV Screener Agent', pii: 'Redacted', cv: 'Read-Only', notes: 'Write Analysis', offer: 'None', audit: 'Write Log' },
                     { role: 'Scheduler Agent', pii: 'Contact Info', cv: 'None', notes: 'None', offer: 'None', audit: 'Write Log' }
                   ].map((row, i) => (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors text-sm">
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors text-xs md:text-sm">
                       <td className="py-5 pl-4 font-bold" style={{ color: 'var(--text-primary)' }}>{row.role}</td>
                       <td className="py-5"><span className={`px-3 py-1 rounded-full text-xs font-bold ${row.pii === 'None' ? 'bg-red-500/10 text-red-400' : 'bg-white/10'}`}>{row.pii}</span></td>
                       <td className="py-5">{row.cv}</td>
@@ -1208,14 +1232,14 @@
     );
 
     const Data3 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 3</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Rights & Revocation</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 3</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Rights & Revocation</h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:h-[600px]">
               {/* Column 1 */}
-              <SpotlightGlass className="rounded-3xl p-8 flex flex-col">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 flex flex-col">
                   <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
                     <span className="text-3xl">📋</span> How to Exercise Rights
                   </h4>
@@ -1228,7 +1252,7 @@
               </SpotlightGlass>
               
               {/* Column 2 */}
-              <SpotlightGlass className="rounded-3xl p-8 flex flex-col">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 flex flex-col">
                   <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
                     <span className="text-3xl">🔓</span> Available Rights
                   </h4>
@@ -1240,7 +1264,7 @@
               </SpotlightGlass>
               
               {/* Column 3 */}
-              <SpotlightGlass className="rounded-3xl p-8 flex flex-col border-t-8 border-rose-500">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-8 flex flex-col border-t-8 border-rose-500">
                   <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
                     <span className="text-3xl">🗑️</span> Revocation Process
                   </h4>
@@ -1269,10 +1293,10 @@
     );
 
     const Ethics1 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 1</h2>
-          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Responsible AI Principles</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          <h2 className="text-xs md:text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 1</h2>
+          <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Responsible AI Principles</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-8">
@@ -1280,9 +1304,9 @@
                 { t: 'Fairness', d: 'Equal treatment regardless of protected characteristics', m: ['Bias detection algorithms', 'Demographic parity monitoring', 'Adverse impact analysis', 'Regular audits'], c: 'emerald' },
                 { t: 'Transparency', d: 'Clear communication about AI involvement and logic', m: ['Candidate notification', 'Explainable recommendations', 'Algorithm documentation', 'Decision rationale'], c: 'blue' },
               ].map((v, i) => (
-                <div key={i} className={`p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
-                  <h4 className={`text-${v.c}-400 font-bold text-2xl mb-4`}>{v.t}</h4>
-                  <p className="text-gray-300 text-lg mb-6">{v.d}</p>
+                <div key={i} className={`p-6 md:p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
+                  <h4 className={`text-${v.c}-400 font-bold text-xl md:text-2xl mb-4`}>{v.t}</h4>
+                  <p className="text-gray-300 text-base md:text-lg mb-6">{v.d}</p>
                   <ul className="grid grid-cols-1 gap-3">
                     {v.m.map((m, j) => <li key={j} className="text-sm text-gray-400 flex gap-3"><span>✓</span> {m}</li>)}
                   </ul>
@@ -1294,9 +1318,9 @@
                 { t: 'Accountability', d: 'Clear ownership and responsibility for AI outcomes', m: ['Human decision ownership', 'Audit trail maintenance', 'Escalation procedures', 'Governance framework'], c: 'purple' },
                 { t: 'Privacy', d: 'Minimal data collection with maximum protection', m: ['Data minimization', 'Purpose limitation', 'Encryption standards', 'Access controls'], c: 'rose' }
               ].map((v, i) => (
-                <div key={i} className={`p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
-                  <h4 className={`text-${v.c}-400 font-bold text-2xl mb-4`}>{v.t}</h4>
-                  <p className="text-gray-300 text-lg mb-6">{v.d}</p>
+                <div key={i} className={`p-6 md:p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
+                  <h4 className={`text-${v.c}-400 font-bold text-xl md:text-2xl mb-4`}>{v.t}</h4>
+                  <p className="text-gray-300 text-base md:text-lg mb-6">{v.d}</p>
                   <ul className="grid grid-cols-1 gap-3">
                     {v.m.map((m, j) => <li key={j} className="text-sm text-gray-400 flex gap-3"><span>✓</span> {m}</li>)}
                   </ul>
@@ -1309,23 +1333,23 @@
     );
 
     const Ethics2 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-5xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 2</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Bias Mitigation Framework</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-5xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 2</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Bias Mitigation Framework</h1>
 
-            <SpotlightGlass className="rounded-3xl p-12">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-12">
               <div className="mb-12">
                   <h4 className="font-bold text-xl mb-6 border-b border-white/10 pb-4" style={{ color: 'var(--text-primary)' }}>Protected Characteristics Monitored</h4>
                   <div className="flex flex-wrap gap-4">
                     {['Gender', 'Age', 'Ethnicity', 'Disability', 'Religion', 'National Origin', 'Sexual Orientation', 'Family Status'].map((item, i) => (
-                      <span key={i} className="px-5 py-2 bg-white/10 rounded-full text-base border border-white/20" style={{ color: 'var(--text-primary)' }}>{item}</span>
+                      <span key={i} className="px-5 py-2 bg-white/10 rounded-full text-sm md:text-base border border-white/20" style={{ color: 'var(--text-primary)' }}>{item}</span>
                     ))}
                   </div>
               </div>
               <div>
                 <h4 className="font-bold text-xl mb-6 border-b border-white/10 pb-4" style={{ color: 'var(--text-primary)' }}>Mitigation Measures</h4>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
                     { m: 'Blind Screening', d: 'Remove identifying info from initial pass' },
                     { m: 'Adverse Impact', d: 'Automated alert on selection rate disparity' },
@@ -1345,13 +1369,13 @@
     );
 
     const Ethics3 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 3</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Human-Centered Design</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 3</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Human-Centered Design</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 flex flex-col text-center">
                   <div className="text-5xl mb-6">🎯</div>
                   <h4 className="text-teal-400 font-bold text-xl mb-6">User Control & Autonomy</h4>
                   <ul className="space-y-4 text-base text-gray-300 text-left">
@@ -1361,7 +1385,7 @@
                     <li>• Control data sharing preferences</li>
                   </ul>
               </SpotlightGlass>
-              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 flex flex-col text-center">
                   <div className="text-5xl mb-6">💬</div>
                   <h4 className="text-blue-400 font-bold text-xl mb-6">Clear Communication</h4>
                   <ul className="space-y-4 text-base text-gray-300 text-left">
@@ -1371,7 +1395,7 @@
                     <li>• Feedback acknowledgment</li>
                   </ul>
               </SpotlightGlass>
-              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+              <SpotlightGlass className="rounded-3xl p-6 md:p-10 flex flex-col text-center">
                   <div className="text-5xl mb-6">🔄</div>
                   <h4 className="text-amber-400 font-bold text-xl mb-6">Graceful Degradation</h4>
                   <ul className="space-y-4 text-base text-gray-300 text-left">
@@ -1387,10 +1411,10 @@
     );
 
     const Sec1 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 1</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Architecture & Monitoring</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 1</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Architecture & Monitoring</h1>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {[
@@ -1398,7 +1422,7 @@
                 { title: 'Data Protection', color: 'amber', items: [{ l: 'Encryption', s: ['TLS 1.3 in transit', 'AES-256 at rest', 'Field-level PII'] }, { l: 'Privacy', s: ['PII masking', 'Tokenization', 'Secure deletion'] }] },
                 { title: 'Compliance', color: 'emerald', items: [{ l: 'Frameworks', s: ['EU AI Act (High-Risk)', 'GDPR', 'SOC 2 Type II'] }, { l: 'Controls', s: ['Configurable retention', 'Right to erasure', 'Consent tracking'] }] },
               ].map((sec, i) => (
-                <SpotlightGlass key={i} className={`rounded-3xl p-8 border-t-8 border-${sec.color}-500`}>
+                <SpotlightGlass key={i} className={`rounded-3xl p-6 md:p-8 border-t-8 border-${sec.color}-500`}>
                   <h3 className="font-bold text-xl mb-6" style={{ color: 'var(--text-primary)' }}>{sec.title}</h3>
                   {sec.items.map((item, j) => (
                     <div key={j} className="mb-6 last:mb-0">
@@ -1412,7 +1436,7 @@
               ))}
             </div>
             
-            <SpotlightGlass className="rounded-3xl p-10">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10">
               <h3 className="text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Observability Stack</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
@@ -1437,12 +1461,12 @@
     );
 
     const Sec2 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 2</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Alerting & Incident Response</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 2</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Alerting & Incident Response</h1>
 
-            <SpotlightGlass className="rounded-3xl p-12 border-t-8 border-rose-500">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-12 border-t-8 border-rose-500">
               <h3 className="text-2xl font-bold mb-10 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
                 <span className="text-3xl">🚨</span> Response Matrix
               </h3>
@@ -1490,12 +1514,12 @@
     );
 
     const Gov1 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 1</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Structure & Cadence</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 1</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Structure & Cadence</h1>
             
-            <SpotlightGlass className="rounded-3xl p-10 mb-10">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10 mb-10">
               <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Governance Structure</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
@@ -1506,7 +1530,7 @@
                 ].map((item, i) => (
                   <div key={i} className={`bg-${item.c}-500/10 border border-${item.c}-500/20 rounded-2xl p-6`}>
                     <h4 className={`text-${item.c}-400 font-bold text-lg mb-2`}>{item.role}</h4>
-                    <p className="text-gray-500 text-xs mb-4 italic h-8">{item.members}</p>
+                    <p className="text-gray-500 text-xs mb-4 italic md:h-8">{item.members}</p>
                     <ul className="space-y-2">
                       {item.resp.map((r, j) => <li key={j} className="text-xs text-gray-300 flex gap-2"><span>●</span> {r}</li>)}
                     </ul>
@@ -1515,7 +1539,7 @@
               </div>
             </SpotlightGlass>
             
-            <SpotlightGlass className="rounded-3xl p-10">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-10">
               <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Review Cadence</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
@@ -1539,12 +1563,12 @@
     );
 
     const Gov2 = () => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-            <h2 className="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 2</h2>
-            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Continuous Improvement</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+            <h2 className="text-xs md:text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 2</h2>
+            <h1 className="text-3xl md:text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Continuous Improvement</h1>
             
-            <SpotlightGlass className="rounded-3xl p-16 text-center border-t-8 border-indigo-500 h-[600px] flex flex-col justify-center">
+            <SpotlightGlass className="rounded-3xl p-6 md:p-16 text-center border-t-8 border-indigo-500 md:h-[600px] flex flex-col justify-center">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {[
                     { id: '1', icon: '📊', t: 'Monitor', d: 'Track fairness, performance, and user satisfaction metrics' },
@@ -1554,7 +1578,7 @@
                     { id: '5', icon: '✓', t: 'Validate', d: 'Measure outcomes, document learnings, close loop' }
                 ].map((step, i) => (
                   <div key={i} className="relative group">
-                      <div className="w-20 h-20 mx-auto bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center text-3xl mb-6 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                      <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center text-2xl md:text-3xl mb-6 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
                         {step.icon}
                       </div>
                       <div className="text-indigo-300 font-bold mb-3 text-lg">{step.id}. {step.t}</div>
@@ -1569,10 +1593,10 @@
     );
 
     const GenericSlide = memo(({ title, subtitle }) => (
-      <div className="slide-container p-8 pb-32">
-        <div className="max-w-6xl mx-auto pt-10">
-          {subtitle && <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">{subtitle}</h2>}
-          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>{title}</h1>
+      <div className="slide-container p-4 md:p-8">
+        <div className="max-w-6xl mx-auto pt-16 md:pt-10">
+          {subtitle && <h2 className="text-xs md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">{subtitle}</h2>}
+          <h1 className="text-3xl md:text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>{title}</h1>
           <div className="glass rounded-3xl p-8 text-center" style={{ minHeight: '300px' }}>
             <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Slide content for {title}</p>
           </div>
@@ -1704,11 +1728,11 @@
           
           <main ref={slideContainerRef}>{renderSlide()}</main>
           
-          <footer className="fixed bottom-24 md:bottom-28 left-0 right-0 z-40 px-6 md:px-8 flex flex-col md:flex-row justify-between items-center md:items-end pointer-events-none gap-2 no-print">
-            <div className="text-[10px] md:text-xs font-medium pointer-events-auto px-3 py-1.5 rounded-full border shadow-lg flex items-center gap-2" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
+          <footer className="hidden md:flex fixed bottom-28 left-0 right-0 z-40 px-8 flex-row justify-between items-end pointer-events-none gap-2 no-print">
+            <div className="text-xs font-medium pointer-events-auto px-3 py-1.5 rounded-full border shadow-lg flex items-center gap-2" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
               <span>© {new Date().getFullYear()} All Rights Reserved</span><span style={{ color: 'var(--text-muted)' }}>|</span><span>Architecture by Georgi Naydenov</span>
             </div>
-            <div className="flex items-center gap-4 text-[10px] md:text-xs font-medium pointer-events-auto px-4 py-1.5 rounded-full border shadow-lg" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
+            <div className="flex items-center gap-4 text-xs font-medium pointer-events-auto px-4 py-1.5 rounded-full border shadow-lg" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
               <a href="https://georginaydenov.github.io/Georgi-Naydenov-Portfolio/" target="_blank" className="hover:text-blue-400 transition-colors">Portfolio</a>
               <a href="https://www.linkedin.com/in/georgi-naydenov/" target="_blank" className="hover:text-blue-400 transition-colors">LinkedIn</a>
               <a href="https://github.com/GeorgiNaydenov" target="_blank" className="hover:text-blue-400 transition-colors">GitHub</a>
@@ -1725,14 +1749,14 @@
                 </div>
               </div>
             )}
-            <div className="backdrop-blur-xl border-t px-6 py-4" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border-color)' }}>
+            <div className="backdrop-blur-xl border-t px-4 md:px-6 py-4" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border-color)' }}>
               <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                 <button onClick={prevSlide} disabled={currentSlide === 0} className="px-4 py-2 rounded-xl hover:bg-white/10 disabled:opacity-30 transition-all font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                   <Icons.ChevronLeft /><span className="hidden md:inline">Previous</span>
                 </button>
-                <div className="flex items-center gap-2 overflow-x-auto flex-1 justify-center px-4">
+                <div className="flex items-center gap-2 overflow-x-auto flex-1 justify-center px-4 no-scrollbar">
                   {slideGroups.map((group, idx) => (
-                    <button key={idx} onClick={() => setCurrentSlide(group.slides[0])} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${group.slides.includes(currentSlide) ? 'bg-white text-black shadow-lg' : 'hover:bg-white/5'}`} style={group.slides.includes(currentSlide) ? {} : { color: 'var(--text-muted)' }}>{group.name}</button>
+                    <button key={idx} onClick={() => setCurrentSlide(group.slides[0])} className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${group.slides.includes(currentSlide) ? 'bg-white text-black shadow-lg' : 'hover:bg-white/5'}`} style={group.slides.includes(currentSlide) ? {} : { color: 'var(--text-muted)' }}>{group.name}</button>
                   ))}
                 </div>
                 <button onClick={nextSlide} disabled={currentSlide === totalSlides - 1} className="px-4 py-2 rounded-xl hover:bg-white/10 disabled:opacity-30 transition-all font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
@@ -1742,9 +1766,9 @@
             </div>
           </nav>
 
-          <div className="fixed top-4 right-4 z-50 flex items-center gap-2 no-print">
-            <div className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>Slide {currentSlide + 1} / {totalSlides}</div>
-            <button onClick={timer.toggle} className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+          <div className="fixed top-2 md:top-4 right-2 md:right-4 z-50 flex items-center gap-2 no-print">
+            <div className="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium hidden sm:block" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>Slide {currentSlide + 1} / {totalSlides}</div>
+            <button onClick={timer.toggle} className="px-3 py-1.5 rounded-full text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
               {timer.isRunning ? <Icons.Pause /> : <Icons.Play />}{timer.format}
             </button>
             <button onClick={() => setShowGrid(g => !g)} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}><Icons.Grid /></button>
@@ -1755,8 +1779,8 @@
           </div>
 
           {currentSlide > 0 && (
-            <button onClick={() => setCurrentSlide(0)} className="fixed top-4 left-4 z-50 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors no-print" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
-              <Icons.Home /><span className="hidden md:inline">Back to Intro</span>
+            <button onClick={() => setCurrentSlide(0)} className="fixed top-2 md:top-4 left-2 md:left-4 z-50 px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors no-print" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+              <Icons.Home /><span className="hidden md:inline">Back</span>
             </button>
           )}
 
