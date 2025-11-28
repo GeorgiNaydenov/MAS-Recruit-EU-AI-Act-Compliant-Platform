@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AI Recruitment Assistant - Multi-Agent Platform</title>
+  <meta name="description" content="AI Recruit: A production-ready, EU AI Act compliant multi-agent recruitment platform.">
+  
+  <!-- Libraries -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+   
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { box-sizing: border-box; }
+    html, body, #root { height: 100%; margin: 0; font-family: 'Inter', sans-serif; }
+    
+    /* Theme Variables */
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #1c1c1e;
+      --bg-tertiary: #2c2c2e;
+      --text-primary: #f5f5f7;
+      --text-secondary: #a1a1a6;
+      --text-muted: #636366;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --glass-bg: rgba(28, 28, 30, 0.65);
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+    }
+    
+    [data-theme="light"] {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f7;
+      --bg-tertiary: #e5e5e7;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-muted: #86868b;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --glass-bg: rgba(255, 255, 255, 0.75);
+    }
+    
+    [data-theme="corporate"] {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f3460;
+      --text-primary: #e8e8e8;
+      --text-secondary: #b0b0b0;
+      --text-muted: #808080;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --glass-bg: rgba(22, 33, 62, 0.75);
+      --accent-blue: #0077b6;
+      --accent-purple: #6c5ce7;
+    }
+    
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .slide-container { 
+      min-height: 100vh; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column;
+      background-color: var(--bg-primary);
+    }
+    
+    /* Glass Material */
+    .glass { 
+      background: var(--glass-bg); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px); 
+      border: 1px solid var(--border-color); 
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    [data-theme="light"] .glass-card {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    
+    .glass-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    [data-theme="light"] .glass-card:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Spotlight Effect */
+    .spotlight-container {
+      --spotlight-x: 50%;
+      --spotlight-y: 50%;
+    }
+    
+    .spotlight-effect::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(300px circle at var(--spotlight-x) var(--spotlight-y), rgba(59, 130, 246, 0.15), transparent 40%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .spotlight-effect:hover::before { opacity: 1; }
+    
+    /* Animated Blobs */
+    @keyframes blob-float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.3;
+      animation: blob-float 20s ease-in-out infinite;
+    }
+    
+    .bg-blob-1 { width: 600px; height: 600px; background: var(--accent-blue); top: -200px; left: -100px; animation-delay: 0s; }
+    .bg-blob-2 { width: 500px; height: 500px; background: var(--accent-purple); bottom: -150px; right: -100px; animation-delay: -7s; }
+    .bg-blob-3 { width: 400px; height: 400px; background: var(--accent-green); top: 50%; left: 50%; animation-delay: -14s; }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .bg-blob, .glass-card, * { animation: none !important; transition: none !important; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      z-index: 100;
+      transition: width 0.3s ease;
+    }
+    
+    /* Grid Overview */
+    .grid-overview {
+      position: fixed; inset: 0; background: var(--bg-primary);
+      z-index: 200; overflow-y: auto; padding: 2rem;
+    }
+    
+    .grid-tile {
+      aspect-ratio: 16/9; border-radius: 12px; overflow: hidden;
+      cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+    }
+    
+    .grid-tile:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+    .grid-tile.active { border: 2px solid var(--accent-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+      z-index: 300; display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary); border-radius: 16px; padding: 2rem;
+      max-width: 500px; width: 90%; border: 1px solid var(--border-color);
+      max-height: 80vh; overflow-y: auto;
+    }
+    
+    /* Utilities */
+    .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    *:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+    
+    /* Presenter Mode */
+    .presenter-panel {
+      position: fixed; bottom: 120px; right: 20px; width: 350px;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 1rem; z-index: 150;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useMemo, useRef, memo } = React;
+
+    // ========== SVG Icons ==========
+    const Icons = {
+      ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>,
+      ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>,
+      ChevronDown: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>,
+      Grid: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
+      Home: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+      Help: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
+      Sun: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>,
+      Moon: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>,
+      Building: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><line x1="9" y1="22" x2="9" y2="2" /><line x1="14" y1="2" x2="14" y2="22" /></svg>,
+      Play: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>,
+      Pause: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>,
+      X: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+      Gem: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 22 22 7 12 2" /></svg>,
+      Zap: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+      Layers: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>,
+      Scale: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="3" x2="12" y2="21" /><path d="M5 12H2a10 10 0 0 0 20 0h-3" /><circle cx="12" cy="3" r="1" /></svg>,
+      User: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
+      Calendar: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+      Mic: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /></svg>,
+      BarChart: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></svg>,
+      MessageSquare: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+      FileText: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
+      Shield: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
+      AlertTriangle: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
+      Lock: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
+      Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
+      XCircle: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>,
+      ArrowRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>,
+      Inbox: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>,
+      Send: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>,
+      Clock: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+      Database: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>,
+      Refresh: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>,
+      Target: () => <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
+      RotateCcw: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+    };
+
+    // ========== Data ==========
+    const useCasesData = [
+      { id: '01', title: 'Intelligent CV Screening', color: 'green', automation: '85%', persona: { icon: 'User', title: 'Talent Acquisition Specialist', description: 'Responsible for initial candidate screening. Spends 60%+ of time reviewing CVs manually, often with inconsistent criteria.' }, painPoints: ['Manual review of 200+ applications per role', 'Inconsistent evaluation across different reviewers', 'Unconscious bias in initial screening', 'Qualified candidates missed due to keyword mismatch'], inputs: ['Job description & requirements', 'Candidate CV/resume', 'Competency framework', 'Must-have vs nice-to-have criteria', 'Bias mitigation ruleset', 'Historical hiring data'], outputs: ['85%+ screening automation', 'Competency match scores', 'Bias audit trail', 'Shortlist with explanations', 'Skills gap analysis', 'Red flag detection'], architecture: [{ name: 'CV Screening Agent', role: 'Parses resumes, extracts skills, matches to JD' }, { name: 'Bias Detection Module', role: 'Checks for demographic proxy indicators' }, { name: 'Compliance Agent', role: 'Ensures GDPR/EU AI Act adherence' }, { name: 'Vector Database', role: 'Stores competency embeddings' }, { name: 'Explainability Engine', role: 'Generates human-readable rationale' }], workflow: ['Application received via ATS integration', 'CV parsed and structured (NER extraction)', 'Skills matched against competency framework', 'Bias check performed on evaluation', 'Explainable score generated', 'Human recruiter reviews AI recommendation'], exceptions: [{ condition: 'Score near threshold', action: 'Flag for mandatory human review' }, { condition: 'Bias indicator detected', action: 'Route to compliance for audit' }, { condition: 'Missing critical info', action: 'Request clarification from candidate' }, { condition: 'VIP referral', action: 'Fast-track with senior review' }], humanInLoop: 'All AI recommendations require human recruiter approval before advancing candidates. Recruiters can override scores and must document rationale.' },
+      { id: '02', title: 'Self-Service Scheduling', color: 'blue', automation: '90%', persona: { icon: 'Calendar', title: 'Candidate + Recruiter Coordinator', description: 'Scheduling interviews involves endless email chains between recruiters, hiring managers, and candidates.' }, painPoints: ['Back-and-forth emails to find times', 'Time zone confusion with global candidates', 'Last-minute cancellations create chaos', 'No visibility into interviewer availability'], inputs: ['Interviewer availability', 'Candidate preferences', 'Interview requirements', 'Room/video link needs', 'Time zone information', 'Buffer time rules'], outputs: ['Self-service booking links', 'Automatic calendar holds', 'Smart rescheduling', 'Reminder sequences', 'No-show tracking', 'Utilization analytics'], architecture: [{ name: 'Scheduler Agent', role: 'Aggregates availability, proposes slots' }, { name: 'Calendar Integrator', role: 'Syncs with Google/Outlook calendars' }, { name: 'Notification Engine', role: 'Sends confirmations and reminders' }, { name: 'Conflict Resolver', role: 'Handles overlaps and reschedules' }, { name: 'Analytics Tracker', role: 'Monitors scheduling patterns' }], workflow: ['Candidate approved for interview stage', 'System aggregates panel availability', 'Personalized booking link generated', 'Candidate selects preferred slot', 'Calendar events created for all parties', 'Reminders sent at configured intervals'], exceptions: [{ condition: 'No availability in window', action: 'Expand search, notify coordinator' }, { condition: 'Last-minute cancellation', action: 'Auto-reschedule from waitlist' }, { condition: 'Interviewer conflict', action: 'Find replacement from panel' }], humanInLoop: 'Hiring managers define availability windows, candidates have full control over slot selection, and either party can trigger rescheduling at any time.' },
+      { id: '03', title: 'Real-Time Interview Intel', color: 'purple', automation: '70%', persona: { icon: 'Mic', title: 'Interviewer + Hiring Manager', description: 'Interviewers conduct discussions but often forget key points. Notes are inconsistent, and insights get lost before decision time.' }, painPoints: ['Manual note-taking distracts from conversation', 'Key points missed or forgotten post-interview', 'Inconsistent documentation across interviewers', 'No structured competency evaluation'], inputs: ['Interview audio stream (with consent)', 'Competency framework for role', 'Question bank and scorecard', 'Previous interview context', 'Candidate portfolio/work samples', 'Job requirements mapping'], outputs: ['98% transcription accuracy', 'Key points extraction', 'Competency-mapped insights', 'Action items summary', 'Sentiment analysis', 'Follow-up questions suggested'], architecture: [{ name: 'Interview Agent', role: 'Real-time transcription and analysis' }, { name: 'NLP Summarizer', role: 'Extracts themes, key points, action items' }, { name: 'Competency Mapper', role: 'Links responses to evaluation criteria' }, { name: 'Consent Manager', role: 'Ensures recording permissions' }, { name: 'Insight Generator', role: 'Provides interviewer with live suggestions' }], workflow: ['Interview begins (recording consent confirmed)', 'Real-time transcription activated', 'Key topics flagged as discussed', 'Competency signals detected', 'Interview concludes, summary generated', 'Interviewer reviews and edits notes', 'Final notes saved to candidate profile'], exceptions: [{ condition: 'Consent not given', action: 'Disable recording, manual notes only' }, { condition: 'Audio quality poor', action: 'Switch to manual mode, notify tech' }, { condition: 'Sensitive topic detected', action: 'Flag for review, do not store' }, { condition: 'Technical failure', action: 'Fallback to backup system' }], humanInLoop: 'Interviewers conduct all conversations, review/edit AI-generated summaries before saving, and provide their own assessment alongside AI insights.' },
+      { id: '04', title: 'Structured Evaluation', color: 'teal', automation: '60%', persona: { icon: 'BarChart', title: 'Hiring Committee', description: 'Committee members need to compare candidates fairly. Current process relies on subjective opinions without standardized criteria.' }, painPoints: ['Subjective evaluation without framework', 'Recency bias in candidate comparison', 'Inconsistent scoring across interviewers', 'Difficulty comparing candidates objectively'], inputs: ['All interview notes/transcripts', 'Competency scorecard template', 'Each interviewer\'s assessment', 'Candidate portfolio evidence', 'Reference check results', 'Technical assessment scores'], outputs: ['Unified candidate profile', 'Competency heat map', 'Comparative ranking', 'Strengths/gaps analysis', 'Hiring recommendation', 'Decision audit trail'], architecture: [{ name: 'Evaluator Agent', role: 'Aggregates scores, normalizes assessments' }, { name: 'Comparison Engine', role: 'Side-by-side candidate analysis' }, { name: 'Bias Checker', role: 'Ensures fair comparison across demographics' }, { name: 'Decision Support', role: 'Generates recommendations with rationale' }, { name: 'Audit Logger', role: 'Tracks all evaluation decisions' }], workflow: ['All interviews completed for shortlist', 'Individual assessments aggregated', 'Competency scores normalized', 'Comparative analysis generated', 'Bias check performed', 'Ranking with explanations provided', 'Committee reviews and makes final decision'], exceptions: [{ condition: 'Score discrepancy >30%', action: 'Trigger calibration discussion' }, { condition: 'Bias indicator flagged', action: 'Require committee review' }, { condition: 'Incomplete assessments', action: 'Chase missing evaluations' }, { condition: 'Tie situation', action: 'Provide additional differentiation data' }], humanInLoop: 'Hiring committee makes ALL final decisions, AI provides recommendations with full transparency, and any committee member can request additional analysis.' },
+      { id: '05', title: 'Candidate Communication', color: 'orange', automation: '80%', persona: { icon: 'MessageSquare', title: 'Candidate + TA Team', description: 'Candidates expect timely updates; recruiters juggle 50+ candidates per role. Communication gaps lead to poor candidate experience.' }, painPoints: ['Candidates wait days for status updates', 'Rejection emails sent without personalization', 'Follow-up questions unanswered for weeks', 'Offer details miscommunicated'], inputs: ['Candidate status in pipeline', 'Interview outcomes', 'Next step requirements', 'Personalization context', 'Template library', 'Timing preferences'], outputs: ['Automated status updates', 'Personalized communications', 'Scheduled next steps', 'FAQ auto-responses', 'Sentiment tracking', 'Response rate analytics'], architecture: [{ name: 'Communicator Agent', role: 'Drafts and sends candidate communications' }, { name: 'Template Engine', role: 'Personalizes messages with context' }, { name: 'Sentiment Analyzer', role: 'Monitors candidate response tone' }, { name: 'Escalation Router', role: 'Flags negative sentiment for human' }, { name: 'Timing Optimizer', role: 'Sends at optimal engagement times' }], workflow: ['Status change detected in pipeline', 'Appropriate communication template selected', 'Message personalized with candidate context', 'Human approval for sensitive messages', 'Communication sent at optimal time', 'Response monitored and classified', 'Follow-up queued if needed'], exceptions: [{ condition: 'Negative sentiment detected', action: 'Escalate to human immediately' }, { condition: 'Rejection message', action: 'Require human approval before send' }, { condition: 'Offer communication', action: 'Mandatory human review' }, { condition: 'Candidate complaint', action: 'Route to senior recruiter' }], humanInLoop: 'Recruiters approve all rejection/offer communications, can override AI drafts, and personally handle escalated candidate concerns.' },
+      { id: '06', title: 'Post-Interview Decision', color: 'red', automation: '50%', persona: { icon: 'FileText', title: 'Hiring Manager + HR', description: 'Final hiring decisions need comprehensive data. Managers often make gut decisions without reviewing all available evidence.' }, painPoints: ['Information scattered across systems', 'No consolidated candidate view', 'Reference checks incomplete or late', 'Offer decisions delayed by process gaps'], inputs: ['Complete interview history', 'All evaluator scorecards', 'Reference check results', 'Background check status', 'Compensation benchmarking', 'Team fit assessment'], outputs: ['Decision support dashboard', 'Risk factor analysis', 'Compensation recommendation', 'Onboarding preparation', 'Offer letter draft', 'Start date planning'], architecture: [{ name: 'Decision Support Agent', role: 'Consolidates all candidate data' }, { name: 'Risk Analyzer', role: 'Identifies potential hiring risks' }, { name: 'Compensation Engine', role: 'Benchmarks and suggests offer' }, { name: 'Document Generator', role: 'Prepares offer documentation' }, { name: 'Onboarding Prep', role: 'Initiates new hire setup' }], workflow: ['Candidate selected for offer', 'All evaluation data consolidated', 'Reference/background checks reviewed', 'Compensation recommendation generated', 'Offer letter drafted', 'Hiring manager approval obtained', 'Offer extended and negotiation tracked'], exceptions: [{ condition: 'Reference concern raised', action: 'Flag for HR review' }, { condition: 'Background check issue', action: 'Pause onboarding, legal review' }, { condition: 'Candidate counteroffer', action: 'Route to compensation committee' }, { condition: 'Decline received', action: 'Trigger pipeline analysis' }], humanInLoop: 'Hiring manager makes final offer decision, HR reviews compensation, and all offer extensions require human approval and signature.' }
+    ];
+
+    const userFlowsData = [
+      {
+        id: '1', title: 'Application-to-Interview Journey', color: 'green',
+        steps: [
+          { step: 1, title: 'Application Receipt', agent: 'CV Screening Agent', inputs: ['Candidate application', 'Job requirements', 'Competency framework', 'Bias rules'], outputs: ['Parsed CV data', 'Skills extraction', 'Initial scoring', 'Bias audit'], outcome: 'Application processed with structured data and initial assessment' },
+          { step: 2, title: 'AI Screening', agent: 'CV Screening Agent + Compliance', inputs: ['Structured CV', 'JD requirements', 'Historical data', 'Threshold config'], outputs: ['Match score', 'Recommendation', 'Explanation', 'Compliance log'], outcome: 'Candidate scored with explainable recommendation and bias check' },
+          { step: 3, title: 'Human Review', agent: 'Human (Recruiter)', inputs: ['AI recommendation', 'Full application', 'Explanation report', 'Previous context'], outputs: ['Approval/rejection', 'Feedback notes', 'Override reason', 'Next action'], outcome: 'Human decision made with documented rationale' },
+          { step: 4, title: 'Interview Scheduling', agent: 'Scheduler Agent', inputs: ['Approval status', 'Interview type', 'Panel availability', 'Candidate prefs'], outputs: ['Scheduling link', 'Confirmed booking', 'Calendar invites', 'Reminders'], outcome: 'Interview scheduled with candidate self-service' }
+        ],
+        humanTouchPoints: ['Recruiter reviews every AI screening recommendation', 'Final shortlist approval before scheduling', 'Ability to override any AI decision with documented reason', 'Candidate can request human-only evaluation at any point'],
+        exceptions: [{ condition: 'Candidate requests no AI', action: 'Route to fully manual process' }, { condition: 'Score near threshold', action: 'Mandatory dual review required' }, { condition: 'High-value role', action: 'Additional senior review layer' }]
+      },
+      {
+        id: '2', title: 'Interview-to-Decision Process', color: 'purple',
+        steps: [
+          { step: 1, title: 'Interview Preparation', agent: 'Interview Agent', inputs: ['Candidate profile', 'Role requirements', 'Question bank', 'Previous notes'], outputs: ['Interview guide', 'Suggested questions', 'Scorecard template', 'Context brief'], outcome: 'Interviewer fully prepared with structured materials' },
+          { step: 2, title: 'Interview Execution', agent: 'Human + Interview Agent', inputs: ['Live audio (with consent)', 'Competency framework', 'Scorecard', 'Notes'], outputs: ['Transcription', 'Key points', 'Competency signals', 'Action items'], outcome: 'Interview captured with AI-assisted note-taking' },
+          { step: 3, title: 'Evaluation Submission', agent: 'Evaluator Agent', inputs: ['Interview notes', 'AI summary', 'Scorecard', 'Interviewer rating'], outputs: ['Structured assessment', 'Competency scores', 'Recommendations', 'Comparison data'], outcome: 'Standardized evaluation ready for committee' },
+          { step: 4, title: 'Committee Decision', agent: 'Human (Hiring Committee)', inputs: ['All evaluations', 'Comparative analysis', 'AI recommendations', 'Discussion notes'], outputs: ['Hire/no-hire decision', 'Feedback for candidate', 'Onboarding trigger', 'Audit log'], outcome: 'Final human decision made with complete context' }
+        ],
+        humanTouchPoints: ['Interviewer conducts all conversations', 'Each interviewer submits own assessment', 'Committee makes final hiring decision', 'All parties can request additional interviews'],
+        exceptions: [{ condition: 'Disagreement >2 points', action: 'Mandatory calibration session' }, { condition: 'Concern raised', action: 'Additional interview round' }, { condition: 'Unanimous strong yes', action: 'Fast-track to offer' }]
+      },
+      {
+        id: '3', title: 'Offer-to-Onboarding Journey', color: 'blue',
+        steps: [
+          { step: 1, title: 'Offer Preparation', agent: 'Decision Support Agent', inputs: ['Committee decision', 'Compensation data', 'Role details', 'Start date prefs'], outputs: ['Offer draft', 'Comp recommendation', 'Benefits summary', 'Legal review flag'], outcome: 'Complete offer package prepared for review' },
+          { step: 2, title: 'Approval & Extension', agent: 'Human (HR + Hiring Manager)', inputs: ['Offer draft', 'Approval chain', 'Budget confirmation', 'Candidate contact'], outputs: ['Approved offer', 'Signed documents', 'Verbal acceptance', 'Written confirmation'], outcome: 'Offer officially extended with human approval' },
+          { step: 3, title: 'Background Processing', agent: 'Compliance Agent', inputs: ['Candidate consent', 'Background providers', 'Reference contacts', 'Verification docs'], outputs: ['Background report', 'Reference summaries', 'Verification status', 'Risk flags'], outcome: 'Pre-employment checks completed' },
+          { step: 4, title: 'Onboarding Setup', agent: 'Orchestrator Agent', inputs: ['Start date', 'Team info', 'IT requirements', 'Training schedule'], outputs: ['Onboarding checklist', 'System access', 'Welcome package', 'Day 1 agenda'], outcome: 'New hire ready to start with complete setup' }
+        ],
+        humanTouchPoints: ['Hiring manager calls to extend verbal offer', 'HR conducts offer negotiation if needed', 'Manager reviews background check results', 'Team lead prepares personalized onboarding'],
+        exceptions: [{ condition: 'Counter-offer received', action: 'Escalate to compensation committee' }, { condition: 'Background issue', action: 'Pause onboarding, legal review' }, { condition: 'Delayed start', action: 'Adjust onboarding timeline' }]
+      }
+    ];
+
+    const speakerNotes = {
+      0: 'Welcome to the AI Recruitment Assistant presentation. This platform represents a comprehensive approach to ethical, automated hiring.',
+      1: 'Key metrics: 85% screening automation, 70% admin reduction, while maintaining 100% human decision authority.',
+      2: 'Our multi-agent approach coordinates 8 specialized agents, each with distinct responsibilities.',
+      3: 'EU AI Act compliance is foundational - we\'re classified as High-Risk under Annex III.',
+      23: 'The architecture follows a layered approach with clear separation of concerns.',
+      31: 'Ethical AI principles guide every aspect of the platform design.',
+      36: 'Governance framework ensures continuous improvement and oversight.'
+    };
+
+    const slideGroups = [
+      { name: 'Intro', slides: [0] },
+      { name: 'Value', slides: [1, 2] },
+      { name: 'Compliance', slides: [3, 4] },
+      { name: 'Use Cases', slides: [5,6,7,8,9,10,11,12,13,14,15,16] },
+      { name: 'Flows', slides: [17,18,19,20,21,22] },
+      { name: 'Arch', slides: [23, 24, 25] },
+      { name: 'Agents', slides: [26, 27] },
+      { name: 'Data', slides: [28, 29, 30] },
+      { name: 'Ethics', slides: [31, 32, 33] },
+      { name: 'Security', slides: [34, 35] },
+      { name: 'Governance', slides: [36, 37] },
+    ];
+    
+    const totalSlides = 38;
+
+    // ========== Hooks ==========
+    const useLocalStorage = (key, initialValue) => {
+      const [storedValue, setStoredValue] = useState(() => {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : initialValue;
+        } catch (error) {
+          return initialValue;
+        }
+      });
+      const setValue = useCallback((value) => {
+        try {
+          setStoredValue(value);
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) { console.error('Error saving to localStorage:', error); }
+      }, [key]);
+      return [storedValue, setValue];
+    };
+
+    const usePresentationTimer = () => {
+      const [time, setTime] = useState(0);
+      const [isRunning, setIsRunning] = useState(false);
+      const intervalRef = useRef(null);
+      useEffect(() => {
+        if (isRunning) { intervalRef.current = setInterval(() => setTime(t => t + 1), 1000); }
+        else { clearInterval(intervalRef.current); }
+        return () => clearInterval(intervalRef.current);
+      }, [isRunning]);
+      const toggle = useCallback(() => setIsRunning(r => !r), []);
+      const format = useMemo(() => {
+        const mins = Math.floor(time / 60);
+        const secs = time % 60;
+        return mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+      }, [time]);
+      return { time, isRunning, toggle, format };
+    };
+
+    // ========== Components ==========
+    const CountUp = memo(({ end, duration = 2000, suffix = '' }) => {
+      const [count, setCount] = useState(0);
+      const [hasStarted, setHasStarted] = useState(false);
+      const ref = useRef(null);
+      useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting && !hasStarted) setHasStarted(true);
+        }, { threshold: 0.5 });
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+      }, [hasStarted]);
+      useEffect(() => {
+        if (!hasStarted) return;
+        const numericEnd = parseFloat(end);
+        const startTime = Date.now();
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.round(numericEnd * eased));
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      }, [hasStarted, end, duration]);
+      return <span ref={ref} className="count-up">{count + suffix}</span>;
+    });
+
+    const SpotlightGlass = memo(({ children, className = '' }) => {
+      const ref = useRef(null);
+      const handleMouseMove = useCallback((e) => {
+        if (!ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        ref.current.style.setProperty('--spotlight-x', (e.clientX - rect.left) + 'px');
+        ref.current.style.setProperty('--spotlight-y', (e.clientY - rect.top) + 'px');
+      }, []);
+      return (
+        <div ref={ref} className={`glass spotlight-effect spotlight-container ${className}`} onMouseMove={handleMouseMove}>
+          {children}
+        </div>
+      );
+    });
+
+    const IntroSlide = memo(({ setCurrentSlide, nextSlide }) => (
+      <div className="slide-container flex flex-col items-center justify-center relative overflow-hidden text-center p-8 pb-32">
+        <div className="bg-blob bg-blob-1" />
+        <div className="bg-blob bg-blob-2" />
+        <div className="bg-blob bg-blob-3" />
+        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-center w-full">
+          <div className="mb-8 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md">
+            <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>EU AI Act Compliant Platform</span>
+          </div>
+          <h1 className="text-7xl md:text-9xl font-bold tracking-tighter mb-6" style={{ color: 'var(--text-primary)' }}>
+            AI Recruit<span className="text-blue-500">.</span>
+          </h1>
+          <p className="text-2xl md:text-3xl font-light max-w-3xl mx-auto mb-16 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            The future of human-centered hiring.<br/>
+            <span style={{ color: 'var(--text-primary)', opacity: 0.8 }}>Ethical. Automated. Explainable.</span>
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-12">
+            {[
+              { label: 'Value & Compliance', slide: 1, icon: 'Gem', desc: 'ROI & EU Regulations' },
+              { label: 'Use Cases', slide: 5, icon: 'Zap', desc: '6 Core Scenarios' },
+              { label: 'Architecture', slide: 23, icon: 'Layers', desc: 'Tech Stack & Agents' },
+              { label: 'Governance', slide: 36, icon: 'Scale', desc: 'Ethics & Security' }
+            ].map((item, i) => {
+              const Icon = Icons[item.icon];
+              return (
+                <button key={i} onClick={() => setCurrentSlide(item.slide)} className="glass-card p-6 rounded-3xl text-left group hover:border-blue-500/30">
+                  <div className="text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-300"><Icon /></div>
+                  <div className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{item.label}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.desc}</div>
+                  <div className="mt-4 flex items-center text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Section <Icons.ArrowRight />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <button onClick={nextSlide} className="px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20">Start Presentation</button>
+          <div className="mt-12 flex gap-8 text-base" style={{ color: 'var(--text-muted)' }}>
+            <a href="https://georginaydenov.github.io/Georgi-Naydenov-Portfolio/" target="_blank" className="hover:text-blue-400 transition-colors">Portfolio</a>
+            <a href="https://www.linkedin.com/in/georgi-naydenov/" target="_blank" className="hover:text-blue-400 transition-colors">LinkedIn</a>
+            <a href="https://github.com/GeorgiNaydenov" target="_blank" className="hover:text-blue-400 transition-colors">GitHub</a>
+          </div>
+          <p className="mt-4 text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Architecture by Georgi Naydenov</p>
+        </div>
+      </div>
+    ));
+
+    const Value1 = memo(() => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 1</h2>
+          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Metrics & Pain Points</h1>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            {[
+              { val: 85, label: 'Screening Automation', desc: 'AI-assisted candidate evaluation', color: 'text-green-500', suffix: '%' },
+              { val: 70, label: 'Admin Reduction', desc: 'Automated scheduling & notes', color: 'text-blue-500', suffix: '%' },
+              { val: 100, label: 'Human Decision', desc: 'EU AI Act Art. 22 compliant', color: 'text-purple-500', suffix: '%' },
+              { val: 45, label: 'Faster Hiring', desc: 'From 42 to 23 days average', color: 'text-orange-500', suffix: '%' },
+            ].map((item, i) => (
+              <SpotlightGlass key={i} className="p-6 rounded-3xl">
+                <div className={`text-5xl font-bold ${item.color} mb-3`}><CountUp end={item.val} suffix={item.suffix} /></div>
+                <div className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{item.label}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item.desc}</div>
+              </SpotlightGlass>
+            ))}
+          </div>
+          <SpotlightGlass className="rounded-3xl p-8">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-400"><Icons.XCircle /></span>
+              Current Pain Points Addressed
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {[
+                { t: 'Manual CV Screening Overload', d: 'Hours spent reviewing unqualified applications' },
+                { t: 'Scheduling Coordination Chaos', d: 'Back-and-forth emails to find interview times' },
+                { t: 'Inconsistent Interview Notes', d: 'Key insights lost, decisions lack documentation' },
+                { t: 'Unconscious Bias in Screening', d: 'No standardized evaluation criteria' },
+                { t: 'Poor Candidate Experience', d: 'Long response times and lack of communication' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl">
+                  <div className="w-2 h-2 rounded-full bg-red-500 mt-2 shrink-0" />
+                  <div>
+                    <div className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>{item.t}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SpotlightGlass>
+        </div>
+      </div>
+    ));
+
+    const Value2 = memo(() => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">Value Proposition • Part 2</h2>
+          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Solutions & Capabilities</h1>
+          <SpotlightGlass className="rounded-3xl p-8 mb-10">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400"><Icons.Check /></span>
+              AI-Powered Solutions
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {[
+                { t: 'Intelligent CV Screening', d: 'Skills matching, experience validation, bias-checked scoring' },
+                { t: 'Self-Service Scheduling', d: 'Candidates select preferred slots, auto-confirmations' },
+                { t: 'Real-Time Interview Notes', d: 'AI transcription, key points extraction, action items' },
+                { t: 'Structured Evaluation', d: 'Competency-based scoring with explainable AI' },
+                { t: 'Automated Communication', d: 'Status updates, feedback delivery, next steps' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl">
+                  <div className="w-2 h-2 rounded-full bg-green-500 mt-2 shrink-0" />
+                  <div>
+                    <div className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>{item.t}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SpotlightGlass>
+          <SpotlightGlass className="rounded-3xl p-8">
+            <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>8 Specialized Agents Working in Concert</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[
+                { n: 'CV Screener', d: 'Resume analysis' }, { n: 'Scheduler', d: 'Interview booking' },
+                { n: 'Interview', d: 'Notes & insights' }, { n: 'Evaluator', d: 'Scoring & ranking' },
+                { n: 'Orchestrator', d: 'Central coordination' }, { n: 'Communicator', d: 'Candidate updates' },
+                { n: 'Compliance', d: 'Bias & audit' }, { n: 'Analytics', d: 'Insights & reports' }
+              ].map((a, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                  <div className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{a.d}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-6 text-sm border-t border-white/10 pt-4" style={{ color: 'var(--text-secondary)' }}>
+              {['EU AI Act High-Risk Compliant', 'Human-in-the-Loop Controls', 'Explainable AI Decisions', 'GDPR Article 22 Safeguards'].map((item, i) => (
+                <span key={i} className="flex items-center gap-2"><span className="text-green-500"><Icons.Check /></span>{item}</span>
+              ))}
+            </div>
+          </SpotlightGlass>
+        </div>
+      </div>
+    ));
+
+    const Compliance1 = memo(() => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 1</h2>
+          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>High-Risk Classification</h1>
+          <SpotlightGlass className="rounded-3xl p-8 border-l-8 border-yellow-500 mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-yellow-400"><Icons.AlertTriangle /></span>
+              <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Annex III Designation</h3>
+            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 mb-6">
+              <p className="text-yellow-400 font-bold text-base mb-2">EU AI Act Annex III, Point 4(a)</p>
+              <p className="text-lg leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"AI systems intended to be used for recruitment or selection of natural persons, particularly for advertising vacancies, screening or filtering applications, evaluating candidates"</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {['CV screening and shortlisting', 'Candidate scoring and ranking', 'Interview scheduling automation', 'Competency-based evaluation'].map((t, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                  <span className="text-yellow-500 text-xl">•</span>
+                  <span className="text-base" style={{ color: 'var(--text-primary)' }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </SpotlightGlass>
+          <SpotlightGlass className="rounded-3xl p-8">
+            <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Requirements Implemented</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { req: 'Risk Management System (Art. 9)', status: 'Implemented', desc: 'Continuous bias monitoring & mitigation' },
+                { req: 'Data Governance (Art. 10)', status: 'Implemented', desc: 'Training data quality assurance' },
+                { req: 'Technical Documentation (Art. 11)', status: 'Implemented', desc: 'Full system documentation maintained' },
+                { req: 'Record-Keeping (Art. 12)', status: 'Implemented', desc: 'Automatic logging of all decisions' },
+                { req: 'Transparency (Art. 13)', status: 'Implemented', desc: 'Candidate notification of AI use' },
+                { req: 'Human Oversight (Art. 14)', status: 'Implemented', desc: 'Human final decision mandatory' },
+              ].map((item, i) => (
+                <div key={i} className="flex justify-between items-start p-4 bg-white/5 rounded-xl border border-white/5">
+                  <div>
+                    <div className="font-medium text-base" style={{ color: 'var(--text-primary)' }}>{item.req}</div>
+                    <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{item.desc}</div>
+                  </div>
+                  <span className="text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded border border-green-500/20 whitespace-nowrap ml-4">{item.status}</span>
+                </div>
+              ))}
+            </div>
+          </SpotlightGlass>
+        </div>
+      </div>
+    ));
+
+    const Compliance2 = memo(() => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-yellow-500 uppercase tracking-widest mb-4">EU AI ACT COMPLIANCE • PART 2</h2>
+          <h1 className="text-5xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>Rights & Transparency</h1>
+          <SpotlightGlass className="rounded-3xl p-10 mb-10">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-purple-400"><Icons.Lock /></span>
+              GDPR Article 22 Safeguards
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {[
+                { title: 'Right to Human Review', desc: 'All AI recommendations require human approval before action', icon: 'User' },
+                { title: 'Right to Explanation', desc: 'Candidates can request explanation of AI scoring logic', icon: 'MessageSquare' },
+                { title: 'Right to Contest', desc: 'Formal process to challenge automated assessments', icon: 'Scale' },
+                { title: 'Right to Data Access', desc: 'Full transparency on data used in evaluation', icon: 'FileText' },
+              ].map((item, i) => {
+                const Icon = Icons[item.icon] || Icons.User;
+                return (
+                  <div key={i} className="flex items-start gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="bg-white/10 w-14 h-14 rounded-xl flex items-center justify-center shrink-0 text-purple-400"><Icon /></div>
+                    <div>
+                      <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{item.title}</h4>
+                      <p className="text-base leading-snug" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SpotlightGlass>
+          <SpotlightGlass className="rounded-3xl p-8 border border-blue-500/30 bg-blue-500/5">
+            <h4 className="text-lg font-bold text-blue-400 mb-2 uppercase tracking-wide flex items-center gap-2">
+              <Icons.Send />
+              Mandatory Transparency Notice
+            </h4>
+            <p className="text-lg italic leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              "This recruitment process uses AI-assisted screening tools. AI provides recommendations to support human recruiters, but all hiring decisions are made by humans. You have the right to: request human-only evaluation, receive explanation of AI assessments, contest automated decisions, and withdraw consent for AI processing."
+            </p>
+          </SpotlightGlass>
+        </div>
+      </div>
+    ));
+
+    const UseCaseContext = memo(({ ucData }) => {
+      const PersonaIcon = Icons[ucData.persona.icon] || Icons.User;
+      return (
+        <div className="slide-container p-8 pb-32">
+          <div className="max-w-6xl mx-auto pt-10">
+            <div className="flex items-center gap-4 mb-4">
+              <span className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • CONTEXT</span>
+              <span className="text-green-500 text-sm font-medium border border-green-500/30 px-3 py-1 rounded-full">{ucData.automation} Automation</span>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <SpotlightGlass className="rounded-3xl p-8 h-full">
+                <div className="flex items-center gap-6 mb-6">
+                  <span className={`bg-white/10 w-20 h-20 rounded-full flex items-center justify-center text-${ucData.color}-400`}><PersonaIcon /></span>
+                  <div>
+                    <div className="text-xs uppercase tracking-widest font-bold mb-1" style={{ color: 'var(--text-muted)' }}>Target Persona</div>
+                    <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{ucData.persona.title}</div>
+                  </div>
+                </div>
+                <p className="text-lg leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>{ucData.persona.description}</p>
+                <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/20">
+                  <h4 className="text-red-400 font-bold mb-4 uppercase tracking-wide text-sm">Pain Points Solved</h4>
+                  <ul className="space-y-3">
+                    {ucData.painPoints.map((p, i) => (
+                      <li key={i} className="flex gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="text-red-400">•</span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </SpotlightGlass>
+              <div className="flex flex-col gap-6 h-full">
+                <SpotlightGlass className="rounded-3xl p-8 flex-1">
+                  <h4 className="text-blue-400 font-bold text-lg mb-4 flex items-center gap-2"><Icons.Inbox /> Required Inputs</h4>
+                  <ul className="space-y-3">
+                    {ucData.inputs.map((input, i) => (
+                      <li key={i} className="flex items-center gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                        {input}
+                      </li>
+                    ))}
+                  </ul>
+                </SpotlightGlass>
+                <SpotlightGlass className="rounded-3xl p-8 flex-1">
+                  <h4 className="text-green-400 font-bold text-lg mb-4 flex items-center gap-2"><Icons.Send /> Outputs & Outcomes</h4>
+                  <ul className="space-y-3">
+                    {ucData.outputs.map((output, i) => (
+                      <li key={i} className="flex items-center gap-3 text-base" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                        {output}
+                      </li>
+                    ))}
+                  </ul>
+                </SpotlightGlass>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+
+    const UseCaseTech = memo(({ ucData }) => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <div className="flex items-center gap-4 mb-4">
+            <span className={`px-4 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wider bg-${ucData.color}-500/20 text-${ucData.color}-400`}>USE CASE {ucData.id} • TECHNICAL</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold mb-10" style={{ color: 'var(--text-primary)' }}>{ucData.title}</h1>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <SpotlightGlass className="rounded-3xl p-8">
+              <h4 className="text-purple-400 font-bold text-lg mb-6 uppercase tracking-wide">Architecture</h4>
+              <div className="space-y-4">
+                {ucData.architecture.map((comp, i) => (
+                  <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{comp.name}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{comp.role}</div>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+            <SpotlightGlass className="rounded-3xl p-8">
+              <h4 className="text-cyan-400 font-bold text-lg mb-6 uppercase tracking-wide">Workflow Steps</h4>
+              <div className="space-y-5 relative pl-4">
+                <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-white/10" />
+                {ucData.workflow.map((step, i) => (
+                  <div key={i} className="flex items-start gap-4 relative z-10">
+                    <div className="w-6 h-6 rounded-full border-2 border-gray-600 text-xs flex items-center justify-center shrink-0 font-bold" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>{i + 1}</div>
+                    <div className="text-sm pt-0.5" style={{ color: 'var(--text-secondary)' }}>{step}</div>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+            <SpotlightGlass className="rounded-3xl p-8 border-t-4 border-orange-500 flex flex-col justify-between">
+              <div>
+                <h4 className="text-orange-400 font-bold text-lg mb-6 uppercase tracking-wide">Exceptions</h4>
+                <div className="space-y-3 mb-10">
+                  {ucData.exceptions.map((exc, i) => (
+                    <div key={i} className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/10">
+                      <div className="text-orange-300 text-xs font-bold mb-1">{exc.condition}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>→ {exc.action}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white/5 p-5 rounded-2xl">
+                <h4 className="font-bold mb-2 uppercase text-xs tracking-wider flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <Icons.User />
+                  Human-in-the-Loop
+                </h4>
+                <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>{ucData.humanInLoop}</p>
+              </div>
+            </SpotlightGlass>
+          </div>
+        </div>
+      </div>
+    ));
+
+    const UserFlowSteps = ({ flowData }) => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-7xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • STEPS</h2>
+          <h1 className="text-5xl md:text-6xl font-bold mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {flowData.steps.map((step, i) => (
+              <SpotlightGlass key={i} className="rounded-3xl p-8 relative group border-t-4 border-purple-500 h-full flex flex-col">
+                <div className="absolute top-4 right-6 text-5xl font-bold opacity-5 select-none" style={{ color: 'var(--text-primary)' }}>{i+1}</div>
+                
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full">{step.agent}</div>
+                </div>
+                
+                <h3 className="text-xl font-bold mb-4 leading-tight" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+                
+                <div className="space-y-4 flex-1">
+                  <div>
+                    <div className="text-xs text-blue-400 font-bold mb-2 uppercase tracking-wide">Inputs</div>
+                    <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                      {step.inputs.map((inp, j) => <li key={j}>• {inp}</li>)}
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="text-xs text-green-400 font-bold mb-2 uppercase tracking-wide">Outputs</div>
+                    <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                      {step.outputs.map((out, j) => <li key={j}>• {out}</li>)}
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <div className="text-xs text-amber-400 font-bold uppercase tracking-wide mb-1">Outcome</div>
+                  <div className="text-sm" style={{ color: 'var(--text-primary)', opacity: 0.9 }}>{step.outcome}</div>
+                </div>
+              </SpotlightGlass>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    const UserFlowDetails = ({ flowData }) => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">USER FLOW {flowData.id} • DETAILS</h2>
+          <h1 className="text-5xl md:text-6xl font-bold mb-16" style={{ color: 'var(--text-primary)' }}>{flowData.title}</h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <SpotlightGlass className="rounded-3xl p-10">
+              <h3 className="text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-3xl bg-white/10 p-2 rounded-xl">👤</span> Human Touch Points
+              </h3>
+              <ul className="space-y-6">
+                {flowData.humanTouchPoints.map((pt, i) => (
+                  <li key={i} className="flex gap-4 items-center p-4 bg-white/5 rounded-2xl">
+                    <span className="text-purple-400 text-lg">●</span> 
+                    <span className="text-lg" style={{ color: 'var(--text-secondary)' }}>{pt}</span>
+                  </li>
+                ))}
+              </ul>
+            </SpotlightGlass>
+            <SpotlightGlass className="rounded-3xl p-10 border-t-8 border-amber-500">
+                <h3 className="text-2xl font-bold mb-8 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
+                  <span className="text-3xl bg-white/10 p-2 rounded-xl">⚠️</span> Exception Handling
+                </h3>
+                <div className="space-y-4">
+                  {flowData.exceptions.map((exc, i) => (
+                    <div key={i} className="bg-amber-500/10 p-5 rounded-2xl border border-amber-500/20">
+                      <div className="text-base text-amber-400 font-bold mb-1">{exc.condition}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>→ {exc.action}</div>
+                    </div>
+                  ))}
+                </div>
+            </SpotlightGlass>
+          </div>
+        </div>
+      </div>
+    );
+
+    const Arch1 = () => (
+      <div className="slide-container p-8 pb-32">
+          <div className="max-w-5xl mx-auto pt-10 text-center">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 1</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Interface & Intelligence</h1>
+            
+            <div className="space-y-8">
+              {/* Layer 1 */}
+              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-rose-500 text-left">
+                <h3 className="text-rose-400 font-bold text-2xl mb-4">Client Interface Layer</h3>
+                <div className="flex flex-wrap gap-4">
+                  {['Career Portal', 'ATS Integration', 'Recruiter Dashboard', 'Hiring Manager App', 'Candidate Portal'].map((t,i) => (
+                      <span key={i} className="px-4 py-2 bg-white/10 rounded-full text-base" style={{ color: 'var(--text-primary)' }}>{t}</span>
+                  ))}
+                </div>
+              </SpotlightGlass>
+              
+              <div className="h-8 w-0.5 bg-gray-700 mx-auto"></div>
+
+              {/* Layer 2 */}
+              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-cyan-500 text-left">
+                <h3 className="text-cyan-400 font-bold text-2xl mb-6">LLM Reasoning Engine</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  {['CV parsing & understanding', 'Competency matching', 'Natural conversation', 'Explanation generation'].map((t,i) => (
+                      <div key={i} className="flex items-center gap-4 text-lg" style={{ color: 'var(--text-secondary)' }}>
+                          <span className="w-2.5 h-2.5 bg-cyan-500 rounded-full"></span> {t}
+                      </div>
+                  ))}
+                </div>
+              </SpotlightGlass>
+
+              <div className="h-8 w-0.5 bg-gray-700 mx-auto"></div>
+
+              {/* Layer 3 */}
+              <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-amber-500 text-left">
+                <h3 className="text-amber-400 font-bold text-2xl mb-4">Prompt Assembly & Context Injection</h3>
+                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Job requirements, candidate history, competency framework, bias rules, compliance constraints</p>
+              </SpotlightGlass>
+            </div>
+          </div>
+      </div>
+    );
+
+    const Arch2 = () => (
+      <div className="slide-container p-8 pb-32">
+          <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 2</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Core Orchestration & Memory</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {/* Layer 4 */}
+              <SpotlightGlass className="rounded-3xl p-8 border-t-8 border-purple-500 h-full">
+                <h3 className="text-purple-400 font-bold text-2xl mb-2 text-center">Crew AI Orchestration Layer</h3>
+                <p className="text-gray-500 text-xs text-center mb-8 uppercase tracking-wide">Multi-Agent Coordination with Human Oversight Checkpoints</p>
+                <div className="space-y-6">
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Plan Engine</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Recruitment task decomposition</li>
+                      <li>• Human checkpoint scheduling</li>
+                      <li>• Compliance verification</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Routing Decisions</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Agent selection logic</li>
+                      <li>• Escalation triggers</li>
+                      <li>• Bias check routing</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Execution Monitor</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Audit trail logging</li>
+                      <li>• SLA tracking & Fairness metrics</li>
+                    </ul>
+                  </div>
+                </div>
+              </SpotlightGlass>
+
+              {/* Layer 5 */}
+              <SpotlightGlass className="rounded-3xl p-8 border-t-8 border-yellow-500 h-full">
+                <h3 className="text-yellow-400 font-bold text-2xl mb-2 text-center">State & Memory Management</h3>
+                <p className="text-gray-500 text-xs text-center mb-8 uppercase tracking-wide">Candidate profiles, interview history, evaluation data, compliance records</p>
+                <div className="space-y-6">
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Candidate Intelligence</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Skills embeddings</li>
+                      <li>• Application history</li>
+                      <li>• Consent records</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Evaluation Framework</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Competency models</li>
+                      <li>• Scorecard templates</li>
+                      <li>• Question banks</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
+                    <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Audit Memory</h4>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      <li>• Decision logs & Bias audit trail</li>
+                      <li>• Compliance evidence</li>
+                    </ul>
+                  </div>
+                </div>
+              </SpotlightGlass>
+            </div>
+          </div>
+      </div>
+    );
+
+    const Arch3 = () => (
+      <div className="slide-container p-8 pb-32">
+          <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">SYSTEM ARCHITECTURE • PART 3</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workers & Integration</h1>
+            
+            {/* Layer 6 */}
+            <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-green-500 mb-10">
+              <h3 className="text-green-400 font-bold text-2xl mb-2">Recruitment Agent Worker Pool</h3>
+              <p className="text-gray-500 text-xs mb-8 uppercase tracking-wide">Specialized agents for ethical, transparent recruitment automation</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[
+                  {n:'CV Screener', d:'Resume analysis'}, {n:'Scheduler', d:'Interview booking'},
+                  {n:'Interview', d:'Notes & capture'}, {n:'Evaluator', d:'Scoring & ranking'},
+                  {n:'Communicator', d:'Candidate updates'}, {n:'Compliance', d:'Bias & audit'},
+                  {n:'Decision', d:'Recommendations'}, {n:'Analytics', d:'Insights & reports'}
+                  ].map((a,i) => (
+                  <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                      <div className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{a.n}</div>
+                      <div className="text-gray-400 text-xs mt-1">{a.d}</div>
+                  </div>
+                  ))}
+              </div>
+            </SpotlightGlass>
+
+            {/* Layer 7 */}
+            <SpotlightGlass className="rounded-3xl p-10 border-l-8 border-blue-500">
+              <h3 className="text-blue-400 font-bold text-2xl mb-8">External Integration Layer</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10 text-center">
+                      <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>ATS Systems</div>
+                      <div className="text-gray-400 text-xs">Greenhouse, Lever, Workday</div>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10 text-center">
+                      <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>Communication</div>
+                      <div className="text-gray-400 text-xs">Email, Calendar, Video</div>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10 text-center">
+                      <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>Background Checks</div>
+                      <div className="text-gray-400 text-xs">Checkr, Sterling, HireRight</div>
+                  </div>
+                  <div className="bg-white/5 p-5 rounded-2xl border border-white/10 text-center">
+                      <div className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>HRIS & Onboarding</div>
+                      <div className="text-gray-400 text-xs">BambooHR, Rippling, Workday</div>
+                  </div>
+              </div>
+            </SpotlightGlass>
+          </div>
+      </div>
+    );
+
+    const Agents1 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-7xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 1</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>The Agent Suite</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { name: 'CV Screener', tag: 'Screener', color: 'emerald', desc: 'AI-powered resume analysis with bias detection', items: ['Skills extraction & matching', 'Experience validation', 'Bias-checked scoring', 'Explainable recommendations', 'Gap analysis generation'] },
+                { name: 'Master Orchestrator', tag: 'Coordinator', color: 'indigo', desc: 'Central intelligence with human checkpoint enforcement', items: ['Workflow stage management', 'Human approval routing', 'Compliance verification', 'Agent task distribution', 'Exception escalation'], core: true },
+                { name: 'Scheduler Agent', tag: 'Booking', color: 'blue', desc: 'Self-service interview scheduling automation', items: ['Availability aggregation', 'Candidate slot selection', 'Calendar synchronization', 'Reminder automation', 'Rescheduling handling'] },
+                { name: 'Interview Agent', tag: 'Capture', color: 'purple', desc: 'Real-time interview intelligence and note-taking', items: ['Consent-based transcription', 'Key point extraction', 'Competency signal detection', 'Action item generation', 'Summary creation'] },
+                { name: 'Evaluator Agent', tag: 'Scorer', color: 'teal', desc: 'Structured assessment and candidate comparison', items: ['Scorecard aggregation', 'Cross-interviewer calibration', 'Bias audit checking', 'Comparative ranking', 'Decision support'] },
+                { name: 'Communicator Agent', tag: 'Updates', color: 'amber', desc: 'Candidate experience and communication automation', items: ['Status update automation', 'Personalized messaging', 'Response monitoring', 'Sentiment tracking', 'Escalation triggers'] },
+                { name: 'Compliance Agent', tag: 'Audit', color: 'rose', desc: 'EU AI Act and GDPR compliance monitoring', items: ['Bias detection & alerts', 'Audit trail maintenance', 'Consent management', 'Right-to-explanation', 'Regulatory reporting'] },
+                { name: 'Analytics Agent', tag: 'Insights', color: 'slate', desc: 'Recruitment performance and fairness analytics', items: ['Pipeline metrics', 'Time-to-hire tracking', 'Diversity analytics', 'Source effectiveness', 'Quality-of-hire signals'] },
+                { name: 'Decision Support Agent', tag: 'Advisor', color: 'cyan', desc: 'Post-interview decision and offer assistance', items: ['Evidence consolidation', 'Risk factor analysis', 'Compensation benchmarking', 'Offer preparation', 'Onboarding trigger'] },
+              ].map((agent, i) => (
+                <SpotlightGlass key={i} className={`rounded-3xl p-6 border-t-8 border-${agent.color}-500 hover:bg-white/5 transition-all relative h-full flex flex-col`}>
+                  {agent.core && <div className="absolute top-4 right-4 bg-indigo-500 text-white text-xs px-3 py-1 rounded-full font-bold uppercase">Core</div>}
+                  <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{agent.name}</h3>
+                  <p className="text-gray-400 text-xs mb-4 italic flex-1">{agent.desc}</p>
+                  <ul className="text-xs text-gray-300 space-y-2 mt-auto">
+                    {agent.items.map((item, j) => <li key={j} className="flex gap-2"><span>•</span> {item}</li>)}
+                  </ul>
+                </SpotlightGlass>
+              ))}
+            </div>
+        </div>
+      </div>
+    );
+
+    const Agents2 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-emerald-500 uppercase tracking-widest mb-4">MULTI-AGENT ARCHITECTURE • PART 2</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Workflow & Rules</h1>
+            
+            <SpotlightGlass className="rounded-3xl p-10 mb-10">
+              <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Agent Hand-offs (Human Checkpoints)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {[
+                  { from: 'CV Screener', to: 'Scheduler', flow: 'Approved candidates → Booking', checkpoint: '👤 Recruiter approval' },
+                  { from: 'Scheduler', to: 'Interview', flow: 'Confirmed slots → Prep', checkpoint: '✓ Auto-proceed' },
+                  { from: 'Interview', to: 'Evaluator', flow: 'Notes → Scoring', checkpoint: '👤 Interviewer review' },
+                  { from: 'Evaluator', to: 'Communicator', flow: 'Decision → Updates', checkpoint: '👤 Manager decision' },
+                  { from: 'Compliance', to: 'All Agents', flow: 'Audit checks → Flags', checkpoint: '👤 Bias review' },
+                  { from: 'Decision', to: 'Onboarding', flow: 'Offer accepted → Setup', checkpoint: '👤 HR approval' },
+                ].map((h, i) => (
+                  <div key={i} className="bg-white/5 rounded-2xl p-5 border border-white/10 text-center flex flex-col items-center">
+                    <div className="flex items-center gap-3 mb-2 font-bold text-base">
+                      <span className="text-emerald-400">{h.from}</span>
+                      <span className="text-gray-600">→</span>
+                      <span className="text-blue-400">{h.to}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 mb-2">{h.flow}</div>
+                    <div className="text-xs text-amber-400 font-bold bg-amber-500/10 px-3 py-1 rounded-full">{h.checkpoint}</div>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+
+            <SpotlightGlass className="rounded-3xl p-10 border-t-8 border-indigo-500">
+              <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-3xl">⚙️</span> Ethical AI Coordination Rules
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  { t: 'Human Final Decision', d: 'All hiring decisions made by humans, AI recommends only' },
+                  { t: 'Explainability Required', d: 'Every AI recommendation includes human-readable rationale' },
+                  { t: 'Bias Monitoring', d: 'Continuous fairness metrics tracking across demographics' },
+                  { t: 'Consent Enforcement', d: 'Candidate opt-out honored at all processing stages' },
+                  { t: 'Audit Trail', d: 'Complete logging of all AI decisions for compliance' }
+                ].map((r, i) => (
+                  <div key={i} className="bg-indigo-500/10 p-5 rounded-2xl border border-indigo-500/20 flex gap-4 items-start">
+                    <span className="text-indigo-400 text-xl font-bold mt-1">●</span>
+                    <div>
+                      <div className="text-indigo-300 font-bold text-base mb-1">{r.t}</div>
+                      <div className="text-gray-400 text-sm">{r.d}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Data1 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 1</h2>
+          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Data Lifecycle & Retention</h1>
+
+          <SpotlightGlass className="rounded-3xl p-10 mb-12 border-t-8 border-blue-500">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-3xl">🔄</span> Candidate Data Lifecycle
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div className="text-blue-400 font-bold text-sm mb-4 uppercase tracking-widest">1. Intake Sources</div>
+                <ul className="text-sm text-gray-400 space-y-2">
+                  <li>• Career Site</li>
+                  <li>• LinkedIn</li>
+                  <li>• Referrals</li>
+                  <li>• Agency Submissions</li>
+                </ul>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div className="text-purple-400 font-bold text-sm mb-4 uppercase tracking-widest">2. Processing (Masked)</div>
+                <ul className="text-sm text-gray-400 space-y-2">
+                  <li>• PII Redaction</li>
+                  <li>• Skill Vectorization</li>
+                  <li>• Experience Normalization</li>
+                  <li>• Consent Verification</li>
+                </ul>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div className="text-amber-400 font-bold text-sm mb-4 uppercase tracking-widest">3. Storage (Secure)</div>
+                <ul className="text-sm text-gray-400 space-y-2">
+                  <li>• Encrypted DB (AES-256)</li>
+                  <li>• Access Logs</li>
+                  <li>• Retention Policies</li>
+                  <li>• Separation of Duties</li>
+                </ul>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div className="text-green-400 font-bold text-sm mb-4 uppercase tracking-widest">4. Action/Output</div>
+                <ul className="text-sm text-gray-400 space-y-2">
+                  <li>• Interview Invites</li>
+                  <li>• Offer Letters</li>
+                  <li>• Analytics (Aggregated)</li>
+                  <li>• Rejection Feedback</li>
+                </ul>
+              </div>
+            </div>
+          </SpotlightGlass>
+
+          <SpotlightGlass className="rounded-3xl p-10">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-3xl">⏱️</span> Retention Policies
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[
+                  { t: 'Active Applications', v: 'Ongoing', d: 'Until decision is made', c: 'text-emerald-400', b: 'emerald' },
+                  { t: 'Rejected Candidates (EU)', v: '6 Months', d: 'GDPR Compliance Limit', c: 'text-blue-400', b: 'blue' },
+                  { t: 'Interview Recordings', v: '30 Days', d: 'Auto-deletion post-review', c: 'text-purple-400', b: 'purple' },
+                  { t: 'Hired Employee Data', v: '7 Years', d: 'Legal employment record', c: 'text-amber-400', b: 'amber' },
+              ].map((item, i) => (
+                  <div key={i} className={`p-6 bg-${item.b}-500/10 rounded-2xl border border-${item.b}-500/20 text-center`}>
+                      <div className={`text-xs ${item.c} font-bold uppercase mb-2`}>{item.t}</div>
+                      <div className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{item.v}</div>
+                      <div className="text-xs text-gray-400">{item.d}</div>
+                  </div>
+              ))}
+            </div>
+          </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Data2 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-7xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 2</h2>
+          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Role-Based Access Control</h1>
+
+          <SpotlightGlass className="rounded-3xl p-10">
+            <div className="overflow-x-auto">
+              <table className="w-full text-base text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 text-gray-500">
+                    <th className="pb-4 pl-4 font-bold uppercase tracking-wider text-sm">Role</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">PII Data</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">CV Access</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Notes</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Offer Details</th>
+                    <th className="pb-4 font-bold uppercase tracking-wider text-sm">Audit Logs</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-300">
+                  {[
+                    { role: 'Recruiter', pii: 'Full', cv: 'Full', notes: 'Full', offer: 'Edit', audit: 'None' },
+                    { role: 'Hiring Manager', pii: 'Full', cv: 'Full', notes: 'View Team', offer: 'Approve', audit: 'None' },
+                    { role: 'Interviewer', pii: 'Masked', cv: 'View (No PII)', notes: 'Own Only', offer: 'None', audit: 'None' },
+                    { role: 'Compliance Officer', pii: 'None', cv: 'None', notes: 'View All', offer: 'None', audit: 'Full' },
+                    { role: 'CV Screener Agent', pii: 'Redacted', cv: 'Read-Only', notes: 'Write Analysis', offer: 'None', audit: 'Write Log' },
+                    { role: 'Scheduler Agent', pii: 'Contact Info', cv: 'None', notes: 'None', offer: 'None', audit: 'Write Log' }
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors text-sm">
+                      <td className="py-5 pl-4 font-bold" style={{ color: 'var(--text-primary)' }}>{row.role}</td>
+                      <td className="py-5"><span className={`px-3 py-1 rounded-full text-xs font-bold ${row.pii === 'None' ? 'bg-red-500/10 text-red-400' : 'bg-white/10'}`}>{row.pii}</span></td>
+                      <td className="py-5">{row.cv}</td>
+                      <td className="py-5">{row.notes}</td>
+                      <td className="py-5">{row.offer}</td>
+                      <td className="py-5"><span className={`px-3 py-1 rounded-full text-xs font-bold ${row.audit.includes('Full') || row.audit.includes('Write') ? 'bg-green-500/10 text-green-400' : 'text-gray-600'}`}>{row.audit}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Data3 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">DATA GOVERNANCE • PART 3</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Rights & Revocation</h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[600px]">
+              {/* Column 1 */}
+              <SpotlightGlass className="rounded-3xl p-8 flex flex-col">
+                  <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
+                    <span className="text-3xl">📋</span> How to Exercise Rights
+                  </h4>
+                  <ol className="list-decimal list-inside space-y-6 text-base text-gray-300 flex-1">
+                    <li>Self-service via Candidate Portal</li>
+                    <li>Email: privacy@company.com</li>
+                    <li>In-app request button</li>
+                    <li>Response within 30 days</li>
+                  </ol>
+              </SpotlightGlass>
+              
+              {/* Column 2 */}
+              <SpotlightGlass className="rounded-3xl p-8 flex flex-col">
+                  <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
+                    <span className="text-3xl">🔓</span> Available Rights
+                  </h4>
+                  <ul className="space-y-6 text-base text-gray-300 flex-1">
+                    {['Access all personal data', 'Request data correction', 'Download data (portability)', 'Request complete deletion', 'Opt-out of AI processing'].map((r,i)=>(
+                        <li key={i} className="flex gap-3 items-start"><span className="text-green-400 font-bold">✓</span> {r}</li>
+                    ))}
+                  </ul>
+              </SpotlightGlass>
+              
+              {/* Column 3 */}
+              <SpotlightGlass className="rounded-3xl p-8 flex flex-col border-t-8 border-rose-500">
+                  <h4 className="flex items-center gap-3 text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
+                    <span className="text-3xl">🗑️</span> Revocation Process
+                  </h4>
+                  <div className="space-y-8 text-base flex-1">
+                    <div>
+                        <div className="text-rose-400 font-bold uppercase mb-1 text-sm tracking-wide">Immediate Effect</div>
+                        <div className="text-gray-300">AI processing stops within 24 hours</div>
+                    </div>
+                    <div>
+                        <div className="text-rose-400 font-bold uppercase mb-1 text-sm tracking-wide">Data Deletion</div>
+                        <div className="text-gray-300">Complete within 30 days max</div>
+                    </div>
+                    <div>
+                        <div className="text-rose-400 font-bold uppercase mb-1 text-sm tracking-wide">Confirmation</div>
+                        <div className="text-gray-300">Written confirmation provided</div>
+                    </div>
+                    <div>
+                        <div className="text-rose-400 font-bold uppercase mb-1 text-sm tracking-wide">Exception</div>
+                        <div className="text-gray-300 text-sm">Legal holds may delay deletion</div>
+                    </div>
+                  </div>
+              </SpotlightGlass>
+            </div>
+        </div>
+      </div>
+    );
+
+    const Ethics1 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          <h2 className="text-sm font-bold text-purple-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 1</h2>
+          <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Responsible AI Principles</h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-8">
+              {[
+                { t: 'Fairness', d: 'Equal treatment regardless of protected characteristics', m: ['Bias detection algorithms', 'Demographic parity monitoring', 'Adverse impact analysis', 'Regular audits'], c: 'emerald' },
+                { t: 'Transparency', d: 'Clear communication about AI involvement and logic', m: ['Candidate notification', 'Explainable recommendations', 'Algorithm documentation', 'Decision rationale'], c: 'blue' },
+              ].map((v, i) => (
+                <div key={i} className={`p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
+                  <h4 className={`text-${v.c}-400 font-bold text-2xl mb-4`}>{v.t}</h4>
+                  <p className="text-gray-300 text-lg mb-6">{v.d}</p>
+                  <ul className="grid grid-cols-1 gap-3">
+                    {v.m.map((m, j) => <li key={j} className="text-sm text-gray-400 flex gap-3"><span>✓</span> {m}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-8">
+              {[
+                { t: 'Accountability', d: 'Clear ownership and responsibility for AI outcomes', m: ['Human decision ownership', 'Audit trail maintenance', 'Escalation procedures', 'Governance framework'], c: 'purple' },
+                { t: 'Privacy', d: 'Minimal data collection with maximum protection', m: ['Data minimization', 'Purpose limitation', 'Encryption standards', 'Access controls'], c: 'rose' }
+              ].map((v, i) => (
+                <div key={i} className={`p-8 rounded-3xl bg-${v.c}-500/10 border border-${v.c}-500/20`}>
+                  <h4 className={`text-${v.c}-400 font-bold text-2xl mb-4`}>{v.t}</h4>
+                  <p className="text-gray-300 text-lg mb-6">{v.d}</p>
+                  <ul className="grid grid-cols-1 gap-3">
+                    {v.m.map((m, j) => <li key={j} className="text-sm text-gray-400 flex gap-3"><span>✓</span> {m}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const Ethics2 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-5xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 2</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Bias Mitigation Framework</h1>
+
+            <SpotlightGlass className="rounded-3xl p-12">
+              <div className="mb-12">
+                  <h4 className="font-bold text-xl mb-6 border-b border-white/10 pb-4" style={{ color: 'var(--text-primary)' }}>Protected Characteristics Monitored</h4>
+                  <div className="flex flex-wrap gap-4">
+                    {['Gender', 'Age', 'Ethnicity', 'Disability', 'Religion', 'National Origin', 'Sexual Orientation', 'Family Status'].map((item, i) => (
+                      <span key={i} className="px-5 py-2 bg-white/10 rounded-full text-base border border-white/20" style={{ color: 'var(--text-primary)' }}>{item}</span>
+                    ))}
+                  </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-xl mb-6 border-b border-white/10 pb-4" style={{ color: 'var(--text-primary)' }}>Mitigation Measures</h4>
+                <div className="grid grid-cols-2 gap-6">
+                  {[
+                    { m: 'Blind Screening', d: 'Remove identifying info from initial pass' },
+                    { m: 'Adverse Impact', d: 'Automated alert on selection rate disparity' },
+                    { m: 'Regular Audits', d: 'Quarterly 3rd party algorithm check' },
+                    { m: 'Model Retraining', d: 'Auto-rebalance on drift detection' }
+                  ].map((item, i) => (
+                    <div key={i} className="p-6 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                      <div className="text-amber-400 font-bold text-lg mb-2">{item.m}</div>
+                      <div className="text-gray-400 text-sm">{item.d}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Ethics3 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-teal-500 uppercase tracking-widest mb-4">ETHICAL FOUNDATIONS • PART 3</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Human-Centered Design</h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+                  <div className="text-5xl mb-6">🎯</div>
+                  <h4 className="text-teal-400 font-bold text-xl mb-6">User Control & Autonomy</h4>
+                  <ul className="space-y-4 text-base text-gray-300 text-left">
+                    <li>• Candidate opt-out at any stage</li>
+                    <li>• Override AI recommendations</li>
+                    <li>• Choose human-only evaluation</li>
+                    <li>• Control data sharing preferences</li>
+                  </ul>
+              </SpotlightGlass>
+              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+                  <div className="text-5xl mb-6">💬</div>
+                  <h4 className="text-blue-400 font-bold text-xl mb-6">Clear Communication</h4>
+                  <ul className="space-y-4 text-base text-gray-300 text-left">
+                    <li>• Plain language AI notifications</li>
+                    <li>• Visual confidence indicators</li>
+                    <li>• Progress & status visibility</li>
+                    <li>• Feedback acknowledgment</li>
+                  </ul>
+              </SpotlightGlass>
+              <SpotlightGlass className="rounded-3xl p-10 flex flex-col text-center">
+                  <div className="text-5xl mb-6">🔄</div>
+                  <h4 className="text-amber-400 font-bold text-xl mb-6">Graceful Degradation</h4>
+                  <ul className="space-y-4 text-base text-gray-300 text-left">
+                    <li>• Manual fallback always available</li>
+                    <li>• AI failure doesn't block process</li>
+                    <li>• Human can complete any task</li>
+                    <li>• System works without AI</li>
+                  </ul>
+              </SpotlightGlass>
+            </div>
+        </div>
+      </div>
+    );
+
+    const Sec1 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 1</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Architecture & Monitoring</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              {[
+                { title: 'Authentication & Authorization', color: 'red', items: [{ l: 'User Auth', s: ['SSO (SAML/OAuth)', 'MFA mandatory', 'Session mgmt'] }, { l: 'Service Auth', s: ['API key rotation', 'mTLS', 'Least privilege'] }] },
+                { title: 'Data Protection', color: 'amber', items: [{ l: 'Encryption', s: ['TLS 1.3 in transit', 'AES-256 at rest', 'Field-level PII'] }, { l: 'Privacy', s: ['PII masking', 'Tokenization', 'Secure deletion'] }] },
+                { title: 'Compliance', color: 'emerald', items: [{ l: 'Frameworks', s: ['EU AI Act (High-Risk)', 'GDPR', 'SOC 2 Type II'] }, { l: 'Controls', s: ['Configurable retention', 'Right to erasure', 'Consent tracking'] }] },
+              ].map((sec, i) => (
+                <SpotlightGlass key={i} className={`rounded-3xl p-8 border-t-8 border-${sec.color}-500`}>
+                  <h3 className="font-bold text-xl mb-6" style={{ color: 'var(--text-primary)' }}>{sec.title}</h3>
+                  {sec.items.map((item, j) => (
+                    <div key={j} className="mb-6 last:mb-0">
+                      <div className={`text-base text-${sec.color}-400 font-bold mb-2`}>{item.l}</div>
+                      <ul className="text-sm text-gray-400 space-y-2 pl-2">
+                        {item.s.map((s, k) => <li key={k}>• {s}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </SpotlightGlass>
+              ))}
+            </div>
+            
+            <SpotlightGlass className="rounded-3xl p-10">
+              <h3 className="text-xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Observability Stack</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  { t: 'Metrics', p: 'Prometheus + Grafana', i: ['Agent performance metrics', 'Fairness indicators', 'Processing latency', 'Error rates by stage'] },
+                  { t: 'Logging', p: 'ELK Stack', i: ['Decision audit logs', 'PII-redacted traces', 'Compliance events', 'User actions'] },
+                  { t: 'Tracing', p: 'OpenTelemetry', i: ['End-to-end request flow', 'Agent handoff tracking', 'Bottleneck identification', 'Failure analysis'] }
+                ].map((obs, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{obs.t}</h4>
+                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full text-gray-300 font-medium">{obs.p}</span>
+                    </div>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      {obs.i.map((item, j) => <li key={j}>• {item}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Sec2 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-4">SECURITY • PART 2</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Alerting & Incident Response</h1>
+
+            <SpotlightGlass className="rounded-3xl p-12 border-t-8 border-rose-500">
+              <h3 className="text-2xl font-bold mb-10 flex items-center gap-4" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-3xl">🚨</span> Response Matrix
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-rose-900/10 border border-rose-500/30 p-8 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-6">
+                      <div className="w-4 h-4 rounded-full bg-rose-500 animate-pulse"></div>
+                      <div className="text-rose-400 font-bold text-xl">CRITICAL (P1)</div>
+                  </div>
+                  <ul className="space-y-4 text-base text-gray-300">
+                      <li>• Bias threshold exceeded</li>
+                      <li>• Data breach detected</li>
+                      <li>• Core service down</li>
+                      <li>• Consent violation</li>
+                  </ul>
+                </div>
+                <div className="bg-amber-900/10 border border-amber-500/30 p-8 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-6">
+                      <div className="w-4 h-4 rounded-full bg-amber-500"></div>
+                      <div className="text-amber-400 font-bold text-xl">WARNING (P2)</div>
+                  </div>
+                  <ul className="space-y-4 text-base text-gray-300">
+                      <li>• Fairness metric drift</li>
+                      <li>• Processing delays</li>
+                      <li>• Integration failures</li>
+                      <li>• High error rates</li>
+                  </ul>
+                </div>
+                <div className="bg-blue-900/10 border border-blue-500/30 p-8 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-6">
+                      <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                      <div className="text-blue-400 font-bold text-xl">INFO (P3)</div>
+                  </div>
+                  <ul className="space-y-4 text-base text-gray-300">
+                      <li>• Model updates deployed</li>
+                      <li>• Scheduled maintenance</li>
+                      <li>• Audit completed</li>
+                      <li>• Scaling events</li>
+                  </ul>
+                </div>
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Gov1 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 1</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Structure & Cadence</h1>
+            
+            <SpotlightGlass className="rounded-3xl p-10 mb-10">
+              <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Governance Structure</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[
+                  { role: 'AI Ethics Board', members: 'C-Suite, Legal, HR, External', resp: ['Policy approval', 'Risk oversight', 'Ethical guidance', 'Stakeholder rep'], c: 'indigo' },
+                  { role: 'Technical Review', members: 'Engineering, Data Science', resp: ['Model validation', 'Bias testing', 'Performance monitoring', 'Security review'], c: 'blue' },
+                  { role: 'HR Compliance', members: 'HR Leadership, Legal', resp: ['Legal compliance', 'Policy enforcement', 'Candidate rights', 'Training'], c: 'emerald' },
+                  { role: 'Operations', members: 'TA Team, IT', resp: ['Day-to-day monitoring', 'Issue escalation', 'User feedback', 'Process improvement'], c: 'amber' },
+                ].map((item, i) => (
+                  <div key={i} className={`bg-${item.c}-500/10 border border-${item.c}-500/20 rounded-2xl p-6`}>
+                    <h4 className={`text-${item.c}-400 font-bold text-lg mb-2`}>{item.role}</h4>
+                    <p className="text-gray-500 text-xs mb-4 italic h-8">{item.members}</p>
+                    <ul className="space-y-2">
+                      {item.resp.map((r, j) => <li key={j} className="text-xs text-gray-300 flex gap-2"><span>●</span> {r}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+            
+            <SpotlightGlass className="rounded-3xl p-10">
+              <h3 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Review Cadence</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[
+                  { f: 'Weekly', a: ['Performance metrics review', 'Incident triage', 'User feedback analysis'], o: 'Operations' },
+                  { f: 'Monthly', a: ['Fairness metrics deep-dive', 'Model performance analysis', 'Process optimization'], o: 'Technical Review' },
+                  { f: 'Quarterly', a: ['Third-party bias audit', 'Compliance assessment', 'Stakeholder feedback'], o: 'HR Compliance' },
+                  { f: 'Annual', a: ['Full system audit', 'Policy review', 'Strategic planning'], o: 'AI Ethics Board' },
+                ].map((item, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <div className="text-xl font-bold text-emerald-400 mb-2">{item.f}</div>
+                    <div className="text-xs text-gray-500 mb-4 uppercase tracking-wide">Owner: {item.o}</div>
+                    <ul className="text-sm text-gray-400 space-y-2">
+                      {item.a.map((act, j) => <li key={j}>• {act}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const Gov2 = () => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+            <h2 className="text-sm font-bold text-indigo-500 uppercase tracking-widest mb-4">AI GOVERNANCE FRAMEWORK • PART 2</h2>
+            <h1 className="text-5xl font-bold mb-12" style={{ color: 'var(--text-primary)' }}>Continuous Improvement</h1>
+            
+            <SpotlightGlass className="rounded-3xl p-16 text-center border-t-8 border-indigo-500 h-[600px] flex flex-col justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                {[
+                    { id: '1', icon: '📊', t: 'Monitor', d: 'Track fairness, performance, and user satisfaction metrics' },
+                    { id: '2', icon: '🔍', t: 'Evaluate', d: 'Analyze patterns, identify issues, assess impact' },
+                    { id: '3', icon: '📋', t: 'Plan', d: 'Develop improvement roadmap with stakeholder input' },
+                    { id: '4', icon: '⚙️', t: 'Implement', d: 'Deploy changes with proper testing and rollback plans' },
+                    { id: '5', icon: '✓', t: 'Validate', d: 'Measure outcomes, document learnings, close loop' }
+                ].map((step, i) => (
+                  <div key={i} className="relative group">
+                      <div className="w-20 h-20 mx-auto bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center text-3xl mb-6 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                        {step.icon}
+                      </div>
+                      <div className="text-indigo-300 font-bold mb-3 text-lg">{step.id}. {step.t}</div>
+                      <div className="text-base text-gray-400 leading-snug">{step.d}</div>
+                      {i < 4 && <div className="hidden md:block absolute top-10 -right-6 text-gray-700 text-3xl">→</div>}
+                  </div>
+                ))}
+              </div>
+            </SpotlightGlass>
+        </div>
+      </div>
+    );
+
+    const GenericSlide = memo(({ title, subtitle }) => (
+      <div className="slide-container p-8 pb-32">
+        <div className="max-w-6xl mx-auto pt-10">
+          {subtitle && <h2 className="text-sm font-bold text-blue-500 uppercase tracking-widest mb-4">{subtitle}</h2>}
+          <h1 className="text-5xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>{title}</h1>
+          <div className="glass rounded-3xl p-8 text-center" style={{ minHeight: '300px' }}>
+            <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Slide content for {title}</p>
+          </div>
+        </div>
+      </div>
+    ));
+
+    // ========== Main App ==========
+    function AIRecruitmentPresentation() {
+      const [currentSlide, setCurrentSlide] = useState(0);
+      const [showGrid, setShowGrid] = useState(false);
+      const [showHelp, setShowHelp] = useState(false);
+      const [theme, setTheme] = useLocalStorage('ai-recruit-theme', 'dark');
+      const [isPresenterMode, setIsPresenterMode] = useState(window.location.hash === '#presenter');
+      const slideContainerRef = useRef(null);
+      const timer = usePresentationTimer();
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+      }, [theme]);
+
+      useEffect(() => {
+        if (slideContainerRef.current) {
+          const heading = slideContainerRef.current.querySelector('h1');
+          if (heading) {
+            heading.setAttribute('tabindex', '-1');
+            heading.focus();
+          }
+        }
+      }, [currentSlide]);
+
+      const nextSlide = useCallback(() => setCurrentSlide(p => Math.min(p + 1, totalSlides - 1)), []);
+      const prevSlide = useCallback(() => setCurrentSlide(p => Math.max(p - 1, 0)), []);
+      
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+          if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+          if (e.key === 'Escape') { e.preventDefault(); setCurrentSlide(0); setShowGrid(false); }
+          if (e.key === 'g' || e.key === 'G') { e.preventDefault(); setShowGrid(g => !g); }
+          if (e.key === '?') { e.preventDefault(); setShowHelp(h => !h); }
+          if (e.key === 'p' || e.key === 'P') { e.preventDefault(); timer.toggle(); }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [nextSlide, prevSlide, timer]);
+
+      const getSlideInfo = (index) => {
+        const info = {
+            17: { title: 'Application-to-Interview Journey', subtitle: 'USER FLOW 1 • STEPS' },
+            18: { title: 'Application-to-Interview Journey', subtitle: 'USER FLOW 1 • DETAILS' },
+            19: { title: 'Interview-to-Decision Process', subtitle: 'USER FLOW 2 • STEPS' },
+            20: { title: 'Interview-to-Decision Process', subtitle: 'USER FLOW 2 • DETAILS' },
+            21: { title: 'Offer-to-Onboarding Journey', subtitle: 'USER FLOW 3 • STEPS' },
+            22: { title: 'Offer-to-Onboarding Journey', subtitle: 'USER FLOW 3 • DETAILS' },
+            23: { title: 'Interface & Intelligence', subtitle: 'SYSTEM ARCHITECTURE • PART 1' },
+            24: { title: 'Core Orchestration & Memory', subtitle: 'SYSTEM ARCHITECTURE • PART 2' },
+            25: { title: 'Workers & Integration', subtitle: 'SYSTEM ARCHITECTURE • PART 3' },
+            26: { title: 'The Agent Suite', subtitle: 'MULTI-AGENT ARCHITECTURE • PART 1' },
+            27: { title: 'Workflow & Rules', subtitle: 'MULTI-AGENT ARCHITECTURE • PART 2' },
+            28: { title: 'Data Lifecycle & Retention', subtitle: 'DATA GOVERNANCE • PART 1' },
+            29: { title: 'Role-Based Access Control', subtitle: 'DATA GOVERNANCE • PART 2' },
+            30: { title: 'Rights & Revocation', subtitle: 'DATA GOVERNANCE • PART 3' },
+            31: { title: 'Responsible AI Principles', subtitle: 'ETHICAL FOUNDATIONS • PART 1' },
+            32: { title: 'Bias Mitigation Framework', subtitle: 'ETHICAL FOUNDATIONS • PART 2' },
+            33: { title: 'Human-Centered Design', subtitle: 'ETHICAL FOUNDATIONS • PART 3' },
+            34: { title: 'Architecture & Monitoring', subtitle: 'SECURITY • PART 1' },
+            35: { title: 'Alerting & Incident Response', subtitle: 'SECURITY • PART 2' },
+            36: { title: 'Structure & Cadence', subtitle: 'AI GOVERNANCE FRAMEWORK • PART 1' },
+            37: { title: 'Continuous Improvement', subtitle: 'AI GOVERNANCE FRAMEWORK • PART 2' },
+        };
+        return info[index] || { title: 'Slide ' + (index + 1), subtitle: '' };
+      };
+
+      const renderSlide = () => {
+        switch (currentSlide) {
+          case 0: return <IntroSlide setCurrentSlide={setCurrentSlide} nextSlide={nextSlide} />;
+          case 1: return <Value1 />;
+          case 2: return <Value2 />;
+          case 3: return <Compliance1 />;
+          case 4: return <Compliance2 />;
+          case 5: return <UseCaseContext ucData={useCasesData[0]} />;
+          case 6: return <UseCaseTech ucData={useCasesData[0]} />;
+          case 7: return <UseCaseContext ucData={useCasesData[1]} />;
+          case 8: return <UseCaseTech ucData={useCasesData[1]} />;
+          case 9: return <UseCaseContext ucData={useCasesData[2]} />;
+          case 10: return <UseCaseTech ucData={useCasesData[2]} />;
+          case 11: return <UseCaseContext ucData={useCasesData[3]} />;
+          case 12: return <UseCaseTech ucData={useCasesData[3]} />;
+          case 13: return <UseCaseContext ucData={useCasesData[4]} />;
+          case 14: return <UseCaseTech ucData={useCasesData[4]} />;
+          case 15: return <UseCaseContext ucData={useCasesData[5]} />;
+          case 16: return <UseCaseTech ucData={useCasesData[5]} />;
+          // New Sections from Suite
+          case 17: return <UserFlowSteps flowData={userFlowsData[0]} />;
+          case 18: return <UserFlowDetails flowData={userFlowsData[0]} />;
+          case 19: return <UserFlowSteps flowData={userFlowsData[1]} />;
+          case 20: return <UserFlowDetails flowData={userFlowsData[1]} />;
+          case 21: return <UserFlowSteps flowData={userFlowsData[2]} />;
+          case 22: return <UserFlowDetails flowData={userFlowsData[2]} />;
+          case 23: return <Arch1 />;
+          case 24: return <Arch2 />;
+          case 25: return <Arch3 />;
+          case 26: return <Agents1 />;
+          case 27: return <Agents2 />;
+          case 28: return <Data1 />;
+          case 29: return <Data2 />;
+          case 30: return <Data3 />;
+          case 31: return <Ethics1 />;
+          case 32: return <Ethics2 />;
+          case 33: return <Ethics3 />;
+          case 34: return <Sec1 />;
+          case 35: return <Sec2 />;
+          case 36: return <Gov1 />;
+          case 37: return <Gov2 />;
+          default:
+            const info = getSlideInfo(currentSlide);
+            return <GenericSlide title={info.title} subtitle={info.subtitle} />;
+        }
+      };
+
+      const activeGroup = slideGroups.find(g => g.slides.includes(currentSlide));
+      const progress = ((currentSlide + 1) / totalSlides) * 100;
+
+      return (
+        <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+          <div className="progress-bar" style={{ width: `${progress}%` }} />
+          
+          <main ref={slideContainerRef}>{renderSlide()}</main>
+          
+          <footer className="fixed bottom-24 md:bottom-28 left-0 right-0 z-40 px-6 md:px-8 flex flex-col md:flex-row justify-between items-center md:items-end pointer-events-none gap-2 no-print">
+            <div className="text-[10px] md:text-xs font-medium pointer-events-auto px-3 py-1.5 rounded-full border shadow-lg flex items-center gap-2" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
+              <span>© {new Date().getFullYear()} All Rights Reserved</span><span style={{ color: 'var(--text-muted)' }}>|</span><span>Architecture by Georgi Naydenov</span>
+            </div>
+            <div className="flex items-center gap-4 text-[10px] md:text-xs font-medium pointer-events-auto px-4 py-1.5 rounded-full border shadow-lg" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
+              <a href="https://georginaydenov.github.io/Georgi-Naydenov-Portfolio/" target="_blank" className="hover:text-blue-400 transition-colors">Portfolio</a>
+              <a href="https://www.linkedin.com/in/georgi-naydenov/" target="_blank" className="hover:text-blue-400 transition-colors">LinkedIn</a>
+              <a href="https://github.com/GeorgiNaydenov" target="_blank" className="hover:text-blue-400 transition-colors">GitHub</a>
+            </div>
+          </footer>
+          
+          <nav className="fixed bottom-0 left-0 right-0 z-50 no-print safe-bottom">
+            {activeGroup && activeGroup.slides.length > 1 && (
+              <div className="flex justify-center mb-4">
+                <div className="glass rounded-full px-4 py-2 flex gap-3">
+                  {activeGroup.slides.map((slideIdx, i) => (
+                    <button key={slideIdx} onClick={() => setCurrentSlide(slideIdx)} className={`w-3 h-3 rounded-full transition-all duration-300 ${currentSlide === slideIdx ? 'bg-white scale-125' : 'bg-white/30 hover:bg-white/50'}`} aria-label={`Go to slide ${i+1}`} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="backdrop-blur-xl border-t px-6 py-4" style={{ background: 'var(--glass-bg)', borderColor: 'var(--border-color)' }}>
+              <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                <button onClick={prevSlide} disabled={currentSlide === 0} className="px-4 py-2 rounded-xl hover:bg-white/10 disabled:opacity-30 transition-all font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                  <Icons.ChevronLeft /><span className="hidden md:inline">Previous</span>
+                </button>
+                <div className="flex items-center gap-2 overflow-x-auto flex-1 justify-center px-4">
+                  {slideGroups.map((group, idx) => (
+                    <button key={idx} onClick={() => setCurrentSlide(group.slides[0])} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${group.slides.includes(currentSlide) ? 'bg-white text-black shadow-lg' : 'hover:bg-white/5'}`} style={group.slides.includes(currentSlide) ? {} : { color: 'var(--text-muted)' }}>{group.name}</button>
+                  ))}
+                </div>
+                <button onClick={nextSlide} disabled={currentSlide === totalSlides - 1} className="px-4 py-2 rounded-xl hover:bg-white/10 disabled:opacity-30 transition-all font-medium flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="hidden md:inline">Next</span><Icons.ChevronRight />
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-2 no-print">
+            <div className="px-3 py-1.5 rounded-full text-sm font-medium" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>Slide {currentSlide + 1} / {totalSlides}</div>
+            <button onClick={timer.toggle} className="px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+              {timer.isRunning ? <Icons.Pause /> : <Icons.Play />}{timer.format}
+            </button>
+            <button onClick={() => setShowGrid(g => !g)} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}><Icons.Grid /></button>
+            <button onClick={() => setTheme(t => t === 'dark' ? 'light' : t === 'light' ? 'corporate' : 'dark')} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+              {theme === 'dark' ? <Icons.Sun /> : theme === 'light' ? <Icons.Moon /> : <Icons.Building />}
+            </button>
+            <button onClick={() => setShowHelp(h => !h)} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}><Icons.Help /></button>
+          </div>
+
+          {currentSlide > 0 && (
+            <button onClick={() => setCurrentSlide(0)} className="fixed top-4 left-4 z-50 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-white/10 transition-colors no-print" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+              <Icons.Home /><span className="hidden md:inline">Back to Intro</span>
+            </button>
+          )}
+
+          {showGrid && (
+            <div className="grid-overview">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>All Slides</h2>
+                  <button onClick={() => setShowGrid(false)} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ color: 'var(--text-secondary)' }}><Icons.X /></button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {Array.from({ length: totalSlides }, (_, i) => (
+                    <button key={i} onClick={() => { setCurrentSlide(i); setShowGrid(false); }} className={`grid-tile p-4 text-left ${currentSlide === i ? 'active' : ''}`}>
+                      <div className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Slide {i + 1}</div>
+                      <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{getSlideInfo(i).title || 'Intro'}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showHelp && (
+            <div className="modal-overlay" onClick={() => setShowHelp(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Keyboard Shortcuts</h2>
+                  <button onClick={() => setShowHelp(false)} className="p-1 rounded hover:bg-white/10 transition-colors" style={{ color: 'var(--text-secondary)' }}><Icons.X /></button>
+                </div>
+                <div className="space-y-4">
+                  {[
+                    { key: '→ / Space', desc: 'Next slide' },
+                    { key: '←', desc: 'Previous slide' },
+                    { key: 'Esc', desc: 'Back to intro' },
+                    { key: 'G', desc: 'Toggle grid overview' },
+                    { key: '?', desc: 'Toggle this help' },
+                    { key: 'P', desc: 'Pause/resume timer' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                      <span className="font-mono text-sm px-2 py-1 rounded" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>{item.key}</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>{item.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isPresenterMode && (
+            <div className="presenter-panel no-print">
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Presenter Notes</h3>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>{speakerNotes[currentSlide] || 'No notes for this slide.'}</p>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <strong>Next: </strong>{currentSlide < totalSlides - 1 ? getSlideInfo(currentSlide + 1).title : 'End'}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AIRecruitmentPresentation />);
+  </script>
+</body>
+</html>
